@@ -4,6 +4,9 @@ zero_velocity = (0, (0, 0, 0))
 
 identity = (1., np.identity(3))
 
+def sinc(x):
+    return np.sinc(x/np.pi)
+
 def rotation_matrix(angle):
     c = np.cos(angle)
     s = np.sin(angle)
@@ -14,7 +17,7 @@ def exponential(infinitesimal):
     trans = np.array([tx, ty])
     rot = rotation_matrix(angle)
     rot2 = rotation_matrix(angle/2)
-    coeff = 2*np.sinc(angle/2)
+    coeff = 2*sinc(angle/2)
     rotated_trans = np.dot(rot2, trans)
     matrix = np.zeros([3,3])
     matrix[:2,:2] = rot
