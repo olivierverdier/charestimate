@@ -39,16 +39,24 @@ def get_vectors(structured_field):
 
     return structured_field[dim:2*dim].copy()
 
+
+def create_signed_element(sign, group_element):
+    return (sign, group_element)
+
+
 def get_sign(signed_group_element):
     return signed_group_element[0]
+
 
 def get_group_element(signed_group_element):
     return signed_group_element[1]
 
+
 def apply_element_to_field(signed_group_element, structured_field):
     # structure_field is a matrix (np.array) with 2*dim lines and
     # nb_control_points columns
-    # signed_group_element is [epsilon, exp] with exp=[lambda, matrix_rigid_defo]
+    # signed_group_element is [epsilon, exp] with exp=[lambda,
+    # matrix_rigid_defo]
     transformed_field = np.empty_like(structured_field)
     points = get_homogeneous_points(structured_field)
     vectors = get_vectors(structured_field)
