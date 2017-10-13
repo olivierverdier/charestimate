@@ -52,10 +52,10 @@ def test_scalar_product():
     field=space.tangent_bundle.element([space.zero(), space.one()])
 
     assert pytest.approx(structured_vector_fields.scalar_product_unstructured(
-            structured_field0, field, kernel)) == 0
+            structured_field0, field)) == 0
 
     assert pytest.approx(structured_vector_fields.scalar_product_unstructured(
-            structured_field1, field, kernel) == 1)
+            structured_field1, field) == 1)
 
 
 def test_apply_element_to_field():

@@ -93,7 +93,7 @@ def scalar_product_structured(structured_field0, structured_field1, kernel):
     return scalar_product
 
 
-def scalar_product_unstructured(structured_field0, field1, kernel):
+def scalar_product_unstructured(structured_field0, field1):
     scalar_product = 0.0
     dim_double, nb_points = structured_field0.shape
     dim = int(dim_double/2)
