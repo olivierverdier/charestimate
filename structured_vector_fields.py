@@ -80,16 +80,15 @@ def scalar_product_structured_unit(unit_structured_field0,
     vector1 = unit_structured_field1[dim:2*dim]
     return kernel(point0, point1) * np.dot(vector0, vector1)
 
-
-def scalar_product_structured(structured_field0, structured_field1, kernel):
-    scalar_product = 0.0
-    nb_points = structured_field0.shape[1]
-
+def generate_scalar_products(structured_field0, structured_field1, kernel, nb_points):
     for i in range(nb_points):
         for j in range(nb_points):
-            scalar_product += scalar_product_structured_unit(
+            yield scalar_product_structured_unit(
                     structured_field0[:, i], structured_field1[:, j], kernel)
 
+def scalar_product_structured(structured_field0, structured_field1, kernel):
+    nb_points = structured_field0.shape[1]
+    scalar_product = sum(generate_scalar_products(structured_field0, structured_field1, kernel, nb_points))
     return scalar_product
 
 
