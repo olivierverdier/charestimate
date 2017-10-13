@@ -9,6 +9,8 @@ Created on Thu Oct 12 13:44:55 2017
 import odl
 import numpy as np
 from group import get_rotation
+from group import get_rigid
+from group import get_scale
 
 __all__ = ('apply_element_to_field', 'scalar_product_structured',
            'scalar_product_unstructured')
@@ -37,20 +39,30 @@ def get_vectors(structured_field):
 
     return structured_field[dim:2*dim].copy()
 
+def get_sign(signed_group_element):
+    return signed_group_element[0]
 
-def apply_element_to_field(group_element, structured_field):
+def get_group_element(signed_group_element):
+    return signed_group_element[1]
+
+def apply_element_to_field(signed_group_element, structured_field):
     # structure_field is a matrix (np.array) with 2*dim lines and
     # nb_control_points columns
-    # group_element is [epsilon, exp] with exp=[lambda, matrix_rigid_defo]
+    # signed_group_element is [epsilon, exp] with exp=[lambda, matrix_rigid_defo]
     transformed_field = np.empty_like(structured_field)
     points = get_homogeneous_points(structured_field)
     vectors = get_vectors(structured_field)
     dim, nb_points = vectors.shape
-    transformed_points = np.dot(group_element[1][1], points)
-    transformed_vectors = np.dot(get_rotation(group_element[1]), vectors)
+
+    group_element = get_group_element(signed_group_element)
+    epsilon = get_sign(signed_group_element)
+    lam = get_scale(group_element)
+
+    transformed_points = np.dot(get_rigid(group_element), points)
+    transformed_vectors = np.dot(get_rotation(group_element), vectors)
 
     transformed_field[0:dim] = transformed_points[0:dim].copy()
-    transformed_field[dim:2*dim] = transformed_vectors.copy()
+    transformed_field[dim:2*dim] = lam * epsilon * transformed_vectors.copy()
 
     return transformed_field
 
