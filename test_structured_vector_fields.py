@@ -73,7 +73,7 @@ def test_apply_element_to_field():
     #expected
     structured_field1 = np.array([[0,0], [0,0], [-1,0], [0,1]])
     structured_field2 = np.array([[0,0], [0,0], [1,0], [0,-1]])
-    structured_field3 = np.array([[0,0], [0,0], [-np.exp*(1),0], [0,np.exp*(1)]])
+    structured_field3 = np.array([[0,0], [0,0], [-np.exp(1),0], [0,np.exp(1)]])
 
     # obtained
     structured_field4 = structured_vector_fields.apply_element_to_field(signed_group_element0, structured_field0)
