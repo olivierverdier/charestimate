@@ -1,13 +1,16 @@
 import group
-import action
 import scipy.optimize as sopt
 
+def get_loss(original, noisy, velocity, sign=1):
+    translated = action(group.exponential(velocity), original)
+    cov = covariance(translated, translated)
+    product = pairing(translated, noisy)
+    return cov + 2*sign*product
+
 def calibrate(original, noisy):
-    def get_loss(sign):
+    def get_signed_loss(sign):
         def loss(velocity):
-            translated = action(group.exponential(velocity), original)
-            cov = covariance(translated, translated)
-            product = scalar_product(translated, noisy)
-            return cov + sign*product
+            return get_loss(original, noisy, velocity, sign)
         return loss
-    sopt.minimize(loss, group.zero_velocity)
+    best = [sopt.minimize(get_loss(sign), group.zero_velocity)
+            for sign in [-1, 1]]
