@@ -37,7 +37,8 @@ def get_vectors(structured_field):
 
 
 
-
+def create_signed_element(sign, group_element):
+    return (sign, group_element)
 
 
 def scalar_product_structured_unit(unit_structured_field0,
