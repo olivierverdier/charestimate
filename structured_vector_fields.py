@@ -6,7 +6,6 @@ Created on Thu Oct 12 13:44:55 2017
 @author: bgris
 """
 
-import odl
 import numpy as np
 from group import get_rotation
 from group import get_rigid
