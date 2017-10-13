@@ -26,4 +26,4 @@ def exponential(infinitesimal):
     return (np.exp(scale), matrix)
 
 def get_rotation(group_element):
-    return group_element[:2,:2]
+    return group_element[1][:2,:2]

@@ -47,7 +47,7 @@ def apply_element_to_field(group_element, structured_field):
     vectors = get_vectors(structured_field)
     dim, nb_points = vectors.shape
     transformed_points = np.dot(group_element[1][1], points)
-    transformed_vectors = np.dot(get_rotation(group_element[1][1]), vectors)
+    transformed_vectors = np.dot(get_rotation(group_element[1]), vectors)
 
     transformed_field[0:dim] = transformed_points[0:dim].copy()
     transformed_field[dim:2*dim] = transformed_vectors.copy()

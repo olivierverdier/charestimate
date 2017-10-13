@@ -11,7 +11,7 @@ def test_identity():
 
 def test_rotation():
     inf = (0, (np.pi, 0, 0))
-    element = group.exponential(inf)[1]
+    element = group.exponential(inf)
     npt.assert_allclose(element[:-1,-1], 0)
     assert pytest.approx(group.get_rotation(element)) == -np.identity(2)
 
