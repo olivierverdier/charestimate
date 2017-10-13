@@ -12,13 +12,13 @@ def test_identity():
 def test_rotation():
     inf = (0, (np.pi, 0, 0))
     element = group.exponential(inf)
-    npt.assert_allclose(element[:-1,-1], 0)
+    npt.assert_allclose(group.get_rigid(element)[:-1,-1], 0)
     assert pytest.approx(group.get_rotation(element)) == -np.identity(2)
 
 def test_translation():
     trans = (0, (0, 1., 0))
-    element = group.exponential(trans)[1]
-    npt.assert_allclose(element[:-1,-1], np.array([1.,0]))
+    element = group.exponential(trans)
+    npt.assert_allclose(group.get_rigid(element)[:-1,-1], np.array([1.,0]))
     assert pytest.approx(group.get_rotation(element)) == np.identity(2)
 
 def test_sinc():

@@ -27,3 +27,9 @@ def exponential(infinitesimal):
 
 def get_rotation(group_element):
     return group_element[1][:2,:2]
+
+def get_rigid(group_element):
+    return group_element[1]
+
+def get_scale(group_element):
+    return group_element[0]
