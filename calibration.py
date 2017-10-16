@@ -3,7 +3,7 @@ import structured_vector_fields as struct
 import scipy.optimize as sopt
 
 
-def get_loss(original, noisy, velocity, sign=1, kernel):
+def get_loss(original, noisy, velocity, sign, kernel):
     group_element = group.exponential(velocity)
     signed_group_element = struct.create_signed_element(sign, group_element)
     translated = struct.apply_element_to_field(signed_group_element, original)
