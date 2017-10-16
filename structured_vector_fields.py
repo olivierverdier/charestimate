@@ -8,7 +8,7 @@ Created on Thu Oct 12 13:44:55 2017
 
 import numpy as np
 
-__all__ = ('apply_element_to_field', 'scalar_product_structured',
+__all__ = ('generate_scalar_products', 'scalar_product_structured',
            'scalar_product_unstructured')
 
 

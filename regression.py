@@ -29,8 +29,8 @@ def solve_regression(signed_group_element_list, field_list, sigma0, sigma1, poin
     for i in range(nb_data):
         signed_group_element_i =  signed_group_element_list[i]
         field_i = field_list[i].copy()
-        epsilon_i = struct.get_sign(signed_group_element_i)
-        group_element_i = struct.get_group_element(signed_group_element_i)
+        epsilon_i = group.get_sign(signed_group_element_i)
+        group_element_i = group.get_group_element(signed_group_element_i)
         rotation_i = group.get_rotation(group_element_i)
         lam_i = group.get_scale(group_element_i)
         rigid_i = group.get_rigid(group_element_i)
