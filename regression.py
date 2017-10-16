@@ -6,7 +6,6 @@ Created on Fri Oct 13 11:30:01 2017
 @author: bgris
 """
 
-import odl
 import numpy as np
 import group
 import structured_vector_fields as struct
