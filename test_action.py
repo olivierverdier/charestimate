@@ -1,5 +1,6 @@
 import numpy as np
 import group
+sd = group.ScaleDisplacement
 import action
 
 def test_apply_element_to_field():
@@ -9,9 +10,9 @@ def test_apply_element_to_field():
     angle=np.pi/2
     infinitesimal = (scale, (angle, tx, ty))
     infinitesimal1 = (1.0, (angle, tx, ty))
-    signed_group_element0=(1, group.exponential(infinitesimal))
-    signed_group_element1=(-1, group.exponential(infinitesimal))
-    signed_group_element2=(1, group.exponential(infinitesimal1))
+    signed_group_element0=(1, sd.exponential(infinitesimal))
+    signed_group_element1=(-1, sd.exponential(infinitesimal))
+    signed_group_element2=(1, sd.exponential(infinitesimal1))
     structured_field0 = np.array([[0,0], [0,0], [0,1], [1,0]])
 
     #expected

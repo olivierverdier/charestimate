@@ -10,8 +10,9 @@ import odl
 import regression as reg
 import numpy as np
 import group
+sd = group.ScaleDisplacement
 import structured_vector_fields as struct
-
+from accessors import *
 
 def test_solve_regression():
     sigma = 1.0
@@ -28,16 +29,17 @@ def test_solve_regression():
     angle= np.pi/2
     infinitesimal0 = (scale, (angle, tx, ty))
     infinitesimal1 = (scale, (angle, tx, ty))
-    signed_group_element0=(1, group.exponential(infinitesimal0))
-    signed_group_element1=(-1, group.exponential(infinitesimal1))
+    signed_group_element0=(1, sd.exponential(infinitesimal0))
+    signed_group_element1=(-1, sd.exponential(infinitesimal1))
 
     angle= np.pi/2
     infinitesimal2 = (0.5, (angle, 1, -1))
-    signed_group_element2=(1, group.exponential(infinitesimal2))
-    group_element2=group.get_group_element(signed_group_element2)
-    points2=np.dot(group.get_rigid(group_element2), np.array([0,0,1]))[0:2]
-    scale2=group.get_scale(group_element2)
-    alpha2=scale2 * np.dot(group.get_rotation(group_element2), np.array([1,0]))
+    signed_group_element2=(1, sd.exponential(infinitesimal2))
+    group_element2 = get_group_element(signed_group_element2)
+    displacement = get_rigid(group_element2)
+    points2=np.dot(displacement, np.array([0,0,1]))[0:2]
+    scale2=get_scale(group_element2)
+    alpha2=scale2 * np.dot(group.Displacement.get_rotation(displacement), np.array([1,0]))
     
     space = odl.uniform_discr(
             min_pt =[-10,-10], max_pt=[10,10], shape=[128, 128],

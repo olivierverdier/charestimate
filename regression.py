@@ -9,6 +9,7 @@ Created on Fri Oct 13 11:30:01 2017
 import numpy as np
 import group
 import structured_vector_fields as struct
+from accessors import *
 
 
 def solve_regression(signed_group_element_list, field_list, sigma0, sigma1, points, eval_kernel):
@@ -28,11 +29,11 @@ def solve_regression(signed_group_element_list, field_list, sigma0, sigma1, poin
     for i in range(nb_data):
         signed_group_element_i =  signed_group_element_list[i]
         field_i = field_list[i].copy()
-        epsilon_i = group.get_sign(signed_group_element_i)
-        group_element_i = group.get_group_element(signed_group_element_i)
-        rotation_i = group.get_rotation(group_element_i)
-        lam_i = group.get_scale(group_element_i)
-        rigid_i = group.get_rigid(group_element_i)
+        epsilon_i = get_sign(signed_group_element_i)
+        group_element_i = get_group_element(signed_group_element_i)
+        lam_i = get_scale(group_element_i)
+        rigid_i = get_rigid(group_element_i)
+        rotation_i = group.Displacement.get_rotation(rigid_i)
         points_transf_i = np.dot(rigid_i, points_homogeneous)[0:2, :]
         eval_field_i = np.array([field_i[u].interpolation(
                 points_transf_i) for u in range(dim)])
