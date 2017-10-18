@@ -4,10 +4,12 @@ import structured_vector_fields
 from accessors import *
 
 def apply_element_to_field(signed_group_element, structured_field):
-    # structure_field is a matrix (np.array) with 2*dim lines and
-    # nb_control_points columns
-    # signed_group_element is [epsilon, exp] with exp=[lambda,
-    # matrix_rigid_defo]
+    """
+    structure_field is a matrix (np.array) with 2*dim lines and
+    nb_control_points columns
+    signed_group_element is [epsilon, exp] with exp=[lambda,
+    matrix_rigid_defo]
+    """
     transformed_field = np.empty_like(structured_field)
     points = structured_vector_fields.get_homogeneous_points(structured_field)
     vectors = structured_vector_fields.get_vectors(structured_field)
