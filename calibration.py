@@ -1,21 +1,33 @@
-import group
-import structured_vector_fields as struct
 import scipy.optimize as sopt
 
 
-def get_loss(original, noisy, velocity, sign, kernel):
-    group_element = group.exponential(velocity)
-    signed_group_element = struct.create_signed_element(sign, group_element)
-    translated = struct.apply_element_to_field(signed_group_element, original)
-    cov = struct.scalar_product_structured(translated, translated, kernel)
-    product = struct.scalar_product_unstructured(translated, noisy, kernel)
-    return cov - 2*sign*product
+def make_discrepancy_from(noisy, product, pairing):
+    """
+    Create a discrepancy measure from noisy point,
+    using a product and a pairing.
+    """
+    def discrepancy(translated):
+        """
+        A measure of the difference between translated and noisy.
+        """
+        cov = product(translated, translated)
+        product = pairing(translated, noisy)
+        return cov - 2*product
+    return discrepancy
 
+def make_loss(original, action, exponential, discrepancy):
+    def loss(velocity):
+        element = exponential(velocity)
+        translated = action(element, original)
+        return discrepancy(translated)
+    return loss
 
-def calibrate(original, noisy, kernel):
-    def get_signed_loss(sign):
-        def loss(velocity):
-            return get_loss(original, noisy, velocity, sign, kernel)
-        return loss
-    best = [sopt.minimize(get_loss(sign), group.zero_velocity)
-            for sign in [-1, 1]]
+def compute_velocity(original, group, action, discrepancy):
+    loss = make_loss(original, action, group.exponential, discrepancy)
+    best = sopt.minimize(loss, group.zero_velocity)
+    return best
+
+def calibrate(original, noisy, group, action, product, pairing):
+    discrepancy = make_discrepancy_from(noisy, product, pairing)
+    velocity = compute_velocity(original, group, action, discrepancy)
+    return velocity
