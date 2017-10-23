@@ -29,7 +29,7 @@ def projection_periodicity(space):
     space_extent = space.max_pt - space.min_pt
 
     def proj(point):
-        return np.mod(point, space_extent) + space.min_pt
+        return np.mod(point[0], space_extent) + space.min_pt
 
     return proj
 
