@@ -35,7 +35,8 @@ def get_vectors(structured_field):
 
     return structured_field[dim:2*dim].copy()
 
-
+def create_structured(points, vectors):
+    return np.vstack([points, vectors])
 
 def create_signed_element(sign, group_element):
     return (sign, group_element)
