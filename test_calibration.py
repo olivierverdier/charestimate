@@ -23,9 +23,6 @@ def get_action(space):
 
 
 
-space = odl.uniform_discr(
-        min_pt =[-1], max_pt=[1], shape=[8],
-        dtype='float32', interp='linear')
 
 def projection_periodicity(space):
 
@@ -53,4 +50,20 @@ def get_kernel(space):
         return value
 
     return kernel
+
+space = odl.uniform_discr(
+        min_pt =[-1], max_pt=[1], shape=[8],
+        dtype='float32', interp='linear')
+
+kernel = get_kernel(space)
+def product(f, g):
+    return struct.scalar_product_structured(f, g, kernel)
+
+points = space.points()[::2]
+vectors = np.ones_like(points)
+original = struct.create_structured(points, vectors)
+action = get_action(space)
+
+translated = action(.5, original)
+vs = struct.get_vectors()
 
