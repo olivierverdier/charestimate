@@ -11,8 +11,8 @@ def make_discrepancy_from(noisy, product, pairing):
         A measure of the difference between translated and noisy.
         """
         cov = product(translated, translated)
-        product = pairing(translated, noisy)
-        return cov - 2*product
+        prod = pairing(translated, noisy)
+        return cov - 2*prod
     return discrepancy
 
 def make_loss(original, action, exponential, discrepancy):
