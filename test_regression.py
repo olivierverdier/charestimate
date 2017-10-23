@@ -14,14 +14,17 @@ sd = group.ScaleDisplacement
 import structured_vector_fields as struct
 from accessors import *
 
+
+sigma = 1.0
+
+def kernel(x,y):
+    return np.exp(- sum([ (xi - yi) ** 2 for xi, yi in zip(x,y)]) / (sigma ** 2))
+
+def kernel_app_0(x):
+    return kernel(x, [0,0])
+
 def test_solve_regression():
-    sigma = 1.0
 
-    def kernel(x,y):
-        return np.exp(- sum([ (xi - yi) ** 2 for xi, yi in zip(x,y)]) / (sigma ** 2))
-
-    def kernel_app_0(x):
-        return kernel(x, [0,0])
 
     scale = 0
     tx = 0.0
@@ -49,6 +52,7 @@ def test_solve_regression():
     kern = kernel_app_0([mgu for mgu in mg])
     #alpha_ref=[1.0, 0.0]
     #vector_field_ref = space.tangent_bundle.element([kern * hu for hu in alpha_ref]).copy()
+
 
     alpha0=[0.0, 1.0]
     vector_field0 = space.tangent_bundle.element([kern * hu for hu in alpha0]).copy()
