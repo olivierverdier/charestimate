@@ -105,5 +105,15 @@ def get_from_structured_to_unstructured(space, kernel):
     return from_structured_to_unstructured
 
 
+def make_covariance_matrix(points, kernel):
+    """ creates the covariance matrix of the kernel for the given points"""
+
+    dim = len(points)
+    p1 = np.reshape(points, (dim, 1, -1))
+    p2 = np.reshape(points, (dim, -1, 1))
+
+    return kernel(p1, p2)
+
+
 
 

@@ -11,6 +11,7 @@ import group
 import pytest
 import numpy as np
 import odl
+import numpy.testing as npt
 
 def test_scalar_product_structured_unit():
     def kernel(x,y):
@@ -57,8 +58,20 @@ def test_scalar_product():
     assert pytest.approx(structured_vector_fields.scalar_product_unstructured(
             structured_field1, field) == 1)
 
+def test_make_covariance_matrix():
+    def kernel(x,y):
+        return np.sum(x + y, axis = 0)
 
+    dim = 2
+    nb_points = 3
 
-#
-#    assert pytest.approx(structured_vector_fields.scalar_product_unstructured(
-#            structured_field1, field, kernel) == 1)
+    points = np.random.randn(dim, nb_points)
+    Mat_expected = np.empty([nb_points, nb_points])
+
+    for i in range(nb_points):
+        for j in range(nb_points):
+            Mat_expected[i, j] = kernel(points[:, i], points[:, j])
+
+    Mat_computed = structured_vector_fields.make_covariance_matrix(points, kernel)
+
+    npt.assert_allclose(Mat_computed, Mat_expected)
