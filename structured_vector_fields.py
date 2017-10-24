@@ -78,7 +78,7 @@ def scalar_product_unstructured(structured_field0, field1):
             field1[u].interpolation(points) for u in range(dim)])
 
     for i in range(nb_points):
-        scalar_product += np.dot(values_field1[:, i], vectors[:, i])
+        scalar_product += np.dot(values_field1.T[i], vectors[:, i])
 
     return scalar_product
 

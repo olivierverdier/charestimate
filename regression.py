@@ -38,7 +38,7 @@ def solve_regression(g, signed_group_element_list, field_list, sigma0, sigma1, p
 
         for k0 in range(nb_points):
             for l0 in range(dim):
-                vector_syst[dim*k0 + l0] += np.dot(eval_field_i[:,k0],
+                vector_syst[dim*k0 + l0] += np.dot(eval_field_i.T[k0],
                         basis_transf_i[:, l0]) / (sigma0 ** 2)
 
     matrix_syst = np.kron(eval_kernel,
