@@ -74,30 +74,49 @@ space = odl.uniform_discr(
         min_pt =[-1], max_pt=[1], shape=[128],
         dtype='float32', interp='linear')
 
+cell_side = space.cell_sides
+
 #kernel = get_kernel(space)
-kernel = get_kernel_gauss(space, 0.1)
+kernel = get_kernel_gauss(space, 0.2)
 def product(f, g):
     return struct.scalar_product_structured(f, g, kernel)
 
-points = space.points()[::2].T
+#points = space.points()[::2].T
 points = np.array([[-0.75, 0.0, 0.2, 0.5,]])
 vectors = np.array([[0.3, 0.0, 0, 1,]])
 original = struct.create_structured(points, vectors)
 action = get_action(space)
 
+translation = np.array([1.0])
+translated = action(translation, original)
 
-translated = action(np.array([.2]), original)
 
-noise = odl.phantom.noise.white_noise(space)*0.005
+
+covariance_matrix = struct.make_covariance_matrix(space.points().T, kernel)
+noise_l2 =  odl.phantom.noise.white_noise(space)*0.05
+#decomp = np.linalg.cholesky(covariance_matrix + 1e-5 * np.identity(len(covariance_matrix)))
+#noise_rkhs = np.dot(decomp, noise_l2)
+noise_rkhs = np.dot(covariance_matrix, noise_l2)
+
+#noise = odl.phantom.noise.white_noise(space)*0.005
 get_unstructured = struct.get_from_structured_to_unstructured(space, kernel)
-noisy = get_unstructured(translated) + noise
-get_unstructured(original).show('original')
-noisy.show('noisy')
+noisy = space.tangent_bundle.element(get_unstructured(translated) + noise_rkhs)
+#get_unstructured(original).show('original')
+#noisy.show('noisy')
+
+#space.tangent_bundle.element(get_unstructured(translated) - get_unstructured(original)).show('difference no noise')
 
 
 result_calibration = calib.calibrate(original, noisy, Translation, action, product, struct.scalar_product_unstructured)
 
 estimated_translated = get_unstructured(action(result_calibration.x, original))
-estimated_translated.show('estimated displacement')
+#estimated_translated.show('estimated displacement')
 #((estimated_translated - noisy) ** 2).show('difference', axis=[-1, 1, 0, 1.0])
-print(result_calibration.x)
+print('real = {}, computed ={} , log diff = {}'.format(translation, result_calibration.x, np.log10(np.abs(translation[0] - result_calibration.x[0]))))
+#print(result_calibration.x - 0.5*space.cell_sides, result_calibration.x + 0.5*space.cell_sides)
+
+
+
+
+
+
