@@ -13,6 +13,7 @@ import group
 sd = group.ScaleDisplacement
 import structured_vector_fields as struct
 from accessors import *
+import accessors as acc
 
 
 sigma = 1.0
@@ -38,10 +39,10 @@ def test_solve_regression():
     angle= np.pi/2
     infinitesimal2 = (0.5, (angle, 1, -1))
     signed_group_element2=(1, sd.exponential(infinitesimal2))
-    group_element2 = get_group_element(signed_group_element2)
-    displacement = get_rigid(group_element2)
+    group_element2 = acc.get_group_element(signed_group_element2)
+    displacement = acc.get_rigid(group_element2)
     points2=np.dot(displacement, np.array([0,0,1]))[0:2]
-    scale2=get_scale(group_element2)
+    scale2 = acc.get_scale(group_element2)
     alpha2=scale2 * np.dot(group.Displacement.get_rotation(displacement), np.array([1,0]))
 
     space = odl.uniform_discr(
@@ -80,11 +81,17 @@ def test_solve_regression():
     eval_kernel_a=[[kernel(points_a[:,i], points_a[:,j]) for i in range(np_pts_a)] for j in range(np_pts_a)]
     eval_kernel_b=[[kernel(points_b[:,i], points_b[:,j]) for i in range(np_pts_b)] for j in range(np_pts_b)]
 
-    alpha_est0 = reg.solve_regression(signed_group_element_list, field_list, sigma0, sigma1, points_a, eval_kernel_a)
-    alpha_est1 = reg.solve_regression(signed_group_element_list, field_list, sigma0, sigma1, points_b, eval_kernel_b)
+    g = group.ScaleDisplacement()
+    alpha_est0 = reg.solve_regression(g, signed_group_element_list, field_list, sigma0, sigma1, points_a, eval_kernel_a)
+    alpha_est1 = reg.solve_regression(g, signed_group_element_list, field_list, sigma0, sigma1, points_b, eval_kernel_b)
+
+    alpha_est0_old = reg.solve_regression_old(signed_group_element_list, field_list, sigma0, sigma1, points_a, eval_kernel_a)
+    alpha_est1_old = reg.solve_regression_old(signed_group_element_list, field_list, sigma0, sigma1, points_b, eval_kernel_b)
 
     print('alpha0 expected without regularization [1, 0]')
+    print('alpha_est0_old ={} '.format(alpha_est0_old))
     print('alpha_est0 ={} '.format(alpha_est0))
 
     print('alpha1 expected without regularization [0, 0, 1, 0, 0, 0]')
+    print('alpha_est1_old = {}'.format(alpha_est1_old))
     print('alpha_est1 = {}'.format(alpha_est1))

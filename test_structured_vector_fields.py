@@ -13,6 +13,9 @@ import numpy as np
 import odl
 import numpy.testing as npt
 
+
+
+
 def test_scalar_product_structured_unit():
     def kernel(x,y):
         return 1
