@@ -115,5 +115,6 @@ def make_covariance_matrix(points, kernel):
     return kernel(p1, p2)
 
 
-
+def get_structured_vectors_from_concatenated(vectors, nb_points, dim):
+    return vectors.reshape(nb_points, dim).T
 

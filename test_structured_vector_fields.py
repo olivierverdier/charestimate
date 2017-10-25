@@ -78,3 +78,17 @@ def test_make_covariance_matrix():
     Mat_computed = structured_vector_fields.make_covariance_matrix(points, kernel)
 
     npt.assert_allclose(Mat_computed, Mat_expected)
+
+def test_get_structured_vectors_from_concatenated():
+    dim = 2
+    nb_points = 5
+    vectors = np.random.randn(dim * nb_points)
+
+    vectors_structured_computed = structured_vector_fields.get_structured_vectors_from_concatenated(vectors, nb_points, dim)
+    vectors_structured_expected = np.empty([dim, nb_points])
+
+    for i in range(dim):
+        for j in range(nb_points):
+            vectors_structured_expected[i, j] = vectors[i + dim * j]
+
+    npt.assert_allclose(vectors_structured_computed, vectors_structured_expected)
