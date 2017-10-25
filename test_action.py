@@ -2,10 +2,14 @@ import numpy as np
 import group
 sd = group.ScaleDisplacement
 import action
+import numpy.testing as npt
 
 import accessors as acc
 
 import structured_vector_fields
+
+import odl
+import structured_vector_fields as struct
 
 def apply_element_to_field_old(signed_group_element, structured_field):
     """
@@ -59,3 +63,41 @@ def test_apply_element_to_field():
     assert structured_field2.any() == structured_field5.any()
 
     assert structured_field3.any() == structured_field6.any()
+
+def get_action(space):
+    """
+    Direct action of translation implemented separately.
+    """
+
+    proj = group.projection_periodicity(space)
+
+    def action(translation, f):
+        points = struct.get_points(f)
+        vectors = struct.get_vectors(f)
+        dim, nb_points = points.shape
+
+        points_translated = np.array([[points[u][v] + translation[u] for v in range(nb_points)] for u in range(dim)])
+        points_translated_projected = proj(points_translated)
+
+        return struct.create_structured(points_translated_projected, vectors)
+
+    return action
+
+def test_translation_action():
+    space = odl.uniform_discr(
+            min_pt =[-1], max_pt=[1], shape=[128],
+            dtype='float32', interp='linear')
+
+    points = np.array([[-0.75, 0.0, 0.2, 0.5,]])
+    vectors = np.array([[0.3, 0.0, 0, 1,]])
+    original = struct.create_structured(points, vectors)
+    translation_action = get_action(space)
+
+    translation = np.array([1.0])
+    expected = translation_action(translation, original)
+
+    g = group.Translation(space)
+
+    computed = action.apply_element_to_field(g, translation, original)
+
+    npt.assert_allclose(computed, expected)

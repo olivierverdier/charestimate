@@ -9,6 +9,38 @@ class ContinuousGroup(Group):
 # TODO: make a difference between continuous and discrete groups
 
 
+
+
+
+def projection_periodicity(space):
+    """
+    Return: periodic projection of a point on the space.
+    """
+    maxi = space.max_pt[0]
+    mini = space.min_pt[0]
+    space_extent = maxi - mini
+    def proj(point):
+        return np.mod(point- space.min_pt, space_extent) + mini
+    return proj
+
+class Translation():
+    def __init__(self, space):
+        self.space = space
+
+    def exponential(velocity):
+        return velocity
+    zero_velocity = np.array([0.0])
+
+    def apply(self, translation, points):
+        dim, nb_points = points.shape
+        proj = projection_periodicity(self.space)
+        points_translated = np.array([[points[u][v] + translation[u] for v in range(nb_points)] for u in range(dim)])
+        points_translated_projected = proj(points_translated)
+        return points_translated_projected
+
+    def apply_differential(self, group_element, vectors):
+        return vectors
+
 class Displacement(ContinuousGroup):
     zero_velocity = np.array([0, 0, 0])
     identity = np.identity(3)

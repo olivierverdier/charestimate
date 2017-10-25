@@ -3,39 +3,7 @@ import odl
 import structured_vector_fields as struct
 import calibration as calib
 
-class Translation():
-    def exponential(velocity):
-        return velocity
-    zero_velocity = np.array([0.0])
 
-def get_action(space):
-    proj = projection_periodicity(space)
-
-    def action(translation, f):
-        points = struct.get_points(f)
-        vectors = struct.get_vectors(f)
-        dim, nb_points = points.shape
-
-        points_translated = np.array([[points[u][v] + translation[u] for v in range(nb_points)] for u in range(dim)])
-        points_translated_projected = proj(points_translated)
-
-        return struct.create_structured(points_translated_projected, vectors)
-
-    return action
-
-
-
-
-
-def projection_periodicity(space):
-    maxi = space.max_pt[0]
-    mini = space.min_pt[0]
-    space_extent = maxi - mini
-
-    def proj(point):
-        return np.mod(point- space.min_pt, space_extent) + mini
-
-    return proj
 
 def get_kernel(space):
     proj = projection_periodicity(space)
