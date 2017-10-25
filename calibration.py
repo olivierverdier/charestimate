@@ -1,5 +1,5 @@
 import scipy.optimize as sopt
-
+import numpy as np
 
 def make_discrepancy_from(noisy, product, pairing):
     """
@@ -34,7 +34,11 @@ def compute_velocity(original, group, action, discrepancy):
     where v is the original.
     """
     loss = make_loss(original, action, group.exponential, discrepancy)
-    best = sopt.minimize(loss, group.zero_velocity)
+    def loss_array(velocity_array):
+        velocity_element= (velocity_array[0], (velocity_array[1], velocity_array[2], velocity_array[3]))
+        return loss(velocity_element)
+    best =sopt.minimize(loss_array, np.array([0,0,0,0]))
+    #best = sopt.minimize(loss, group.zero_velocity)
     return best
 
 def calibrate(original, noisy, group, action, product, pairing):
