@@ -9,7 +9,7 @@ class ContinuousGroup(Group):
 
 
 class Displacement(ContinuousGroup):
-    zero_velocity = (0, 0, 0)
+    zero_velocity = np.array([0, 0, 0])
     identity = np.identity(3)
 
     @classmethod
@@ -58,10 +58,14 @@ class Displacement(ContinuousGroup):
 
         return np.dot(rotation.T, vectors)
 
+    @classmethod
+    def to_array(self, velocity):
+        return np.array(velocity)
+
 
 class Scaling(ContinuousGroup):
-    zero_velocity = 0
-    identity = 1.
+    zero_velocity = np.array([0.])
+    identity = np.array([1.])
 
     @classmethod
     def exponential(self, velocity):
@@ -82,12 +86,17 @@ class Scaling(ContinuousGroup):
 
 def make_product(G1, G2):
     class Product(ContinuousGroup):
-        zero_velocity = (G1.zero_velocity, G2.zero_velocity)
+        zero_velocity_1 = G1.zero_velocity
+        dim1 = len(zero_velocity_1)
+        zero_velocity_2 = G2.zero_velocity
+        dim2 = len(zero_velocity_2)
+        zero_velocity = np.array(list(zero_velocity_1) + list(zero_velocity_2))
         identity = (G1.identity, G2.identity)
 
         @classmethod
         def exponential(self, velocity):
-            v1, v2 = velocity
+            v1 = velocity[:self.dim1]
+            v2 = velocity[self.dim1:]
             return (G1.exponential(v1), G2.exponential(v2))
 
         @classmethod

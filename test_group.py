@@ -14,17 +14,17 @@ def test_identity():
 
 def test_rotation():
     g = group.Displacement()
-    inf = (np.pi, 0, 0)
+    inf = np.array((np.pi, 0, 0))
     element = g.exponential(inf)
     npt.assert_allclose(g.get_translation(element), 0)
-    assert pytest.approx(g.get_rotation(element)) == -np.identity(2)
+    npt.assert_allclose(g.get_rotation(element),-np.identity(2), atol= 1e-15)
 
 def test_translation():
     g = group.Displacement()
-    trans = (0, 1., 0)
+    trans = np.array((0, 1., 0))
     element = g.exponential(trans)
     npt.assert_allclose(g.get_translation(element), np.array([1.,0]))
-    assert pytest.approx(g.get_rotation(element)) == np.identity(2)
+    npt.assert_allclose(g.get_rotation(element), np.identity(2))
 
 def test_exponential():
     g = group.Displacement()
@@ -37,8 +37,8 @@ def test_exponential():
     velocity_matrix[0,1] = -theta
     velocity_matrix[:2,-1] = trans
     expected = sl.expm(velocity_matrix)
-    computed = g.exponential((theta, trans[0], trans[1]))
-    assert pytest.approx(computed) == expected
+    computed = g.exponential(np.array([theta, trans[0], trans[1]]))
+    npt.assert_allclose(computed, expected)
 
 
 def test_sinc():
@@ -47,8 +47,8 @@ def test_sinc():
 def test_apply():
     points = np.array([[0, 1], [1, 2]])
     g = group.Displacement()
-    inf = (0.5*np.pi, 0, 0)
-    trans = (0, 1., 0)
+    inf = np.array((0.5*np.pi, 0, 0))
+    trans = np.array((0, 1., 0))
     group_element0 = g.exponential(g.zero_velocity)
     group_element1 = g.exponential(inf)
     group_element2 = g.exponential(trans)
