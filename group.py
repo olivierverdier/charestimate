@@ -6,6 +6,7 @@ class Group():
 
 class ContinuousGroup(Group):
     pass
+# TODO: make a difference between continuous and discrete groups
 
 
 class Displacement(ContinuousGroup):
