@@ -21,9 +21,9 @@ def test_apply_element_to_field():
     structured_field3 = np.array([[0,0], [0,0], [-np.exp(1),0], [0,np.exp(1)]])
 
     # obtained
-    structured_field4 = action.apply_element_to_field(signed_group_element0, structured_field0)
-    structured_field5 = action.apply_element_to_field(signed_group_element1, structured_field0)
-    structured_field6 = action.apply_element_to_field(signed_group_element2, structured_field0)
+    structured_field4 = action.apply_element_to_field_old(signed_group_element0, structured_field0)
+    structured_field5 = action.apply_element_to_field_old(signed_group_element1, structured_field0)
+    structured_field6 = action.apply_element_to_field_old(signed_group_element2, structured_field0)
 
     assert structured_field4.any() == structured_field1.any()
 
