@@ -34,6 +34,7 @@ def solve_regression(g, group_element_list, field_list, sigma0, sigma1, points, 
                 points_transf_i) for u in range(dim)])
 
 
+        # TODO: use broadcasting here
         for k0 in range(nb_points):
             for l0 in range(dim):
                 vector_syst[dim*k0 + l0] += np.dot(eval_field_i.T[k0],
