@@ -26,11 +26,11 @@ def solve_regression(g, signed_group_element_list, field_list, sigma0, sigma1, p
     for i in range(nb_data):
         field_i = field_list[i].copy()
         signed_group_element_i =  signed_group_element_list[i]
-        sign_i = acc.get_sign(signed_group_element_i)
-        group_element_i = acc.get_group_element(signed_group_element_i)
-        points_transf_i = g.apply(group_element_i, points)
-        basis_transf_i = sign_i * g.apply_differential(group_element_i, basis)
-        basis_deformed_tot += sign_i * g.apply_differential_transpose(group_element_i, basis_transf_i)
+        #sign_i = acc.get_sign(signed_group_element_i)
+        #group_element_i = acc.get_group_element(signed_group_element_i)
+        points_transf_i = g.apply(signed_group_element_i, points)
+        basis_transf_i =  g.apply_differential(signed_group_element_i, basis)
+        basis_deformed_tot += g.apply_differential_transpose(signed_group_element_i, basis_transf_i)
 
         eval_field_i = np.array([field_i[u].interpolation(
                 points_transf_i) for u in range(dim)])
