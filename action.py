@@ -11,7 +11,7 @@ def apply_element_to_field(g, signed_group_element, structured_field):
     signed_group_element is a generic signed group
     """
     transformed_field = np.empty_like(structured_field)
-    points = structured_vector_fields.get_homogeneous_points(structured_field)
+    points = structured_vector_fields.get_points(structured_field)
     vectors = structured_vector_fields.get_vectors(structured_field)
     dim, nb_points = vectors.shape
 
