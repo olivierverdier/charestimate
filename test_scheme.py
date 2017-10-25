@@ -144,7 +144,7 @@ field_list = [vector_field0, vector_field1, vector_field2]
 points_a = np.array([[0.0]])
 points_b = np.array([[-0.5, 0.0, 0.5]])
 
-nb_iteration = 30
+nb_iteration = 1
 
 
 act = get_action(space)
