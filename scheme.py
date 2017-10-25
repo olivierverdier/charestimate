@@ -14,29 +14,30 @@ import accessors as acc
 def calibrate_list(original, field_list, g, action, product, pairing):
     nb_data = len(field_list)
     group_element_list = [calib.calibrate(original, field_list[i], g, action, product, pairing).x for i in range(nb_data)]
-    return [acc.create_signed_element(1, group_element_list[i]) for i in range(nb_data)]
+    return group_element_list
 
 
 def iterative_scheme(solve_regression, calibration, action, g, kernel, field_list, sigma0, sigma1, points, nb_iteration):
-
+    nb_data = len(field_list)
     eval_kernel = struct.make_covariance_matrix(points, kernel)
     dim, nb_points = points.shape
     def product(vect0, vect1):
         return struct.scalar_product_structured(vect0, vect1, kernel)
 
     # initialization with a structured version of first vector field (NOT GOOD)
-    signed_group_element_init = acc.create_signed_element(1,  g.identity)
-    vectors_original = solve_regression(g, [signed_group_element_init], [field_list[0]], sigma0, sigma1, points, eval_kernel)
+    group_element_init = g.identity
+    vectors_original = solve_regression(g, [group_element_init], [field_list[0]], sigma0, sigma1, points, eval_kernel)
     vectors_original_struct = struct.get_structured_vectors_from_concatenated(vectors_original, nb_points, dim)
     original = struct.create_structured(points, vectors_original_struct)
 
     for k in range(nb_iteration):
-        signed_group_element_list = calibrate_list(original, field_list, g, action, product, struct.scalar_product_unstructured)
-        vectors_original = solve_regression(g, signed_group_element_list, field_list, sigma0, sigma1, points, eval_kernel)
+        velocity_list = calibrate_list(original, field_list, g, action, product, struct.scalar_product_unstructured)
+        group_element_list = [g.exponential(velocity_list[i]) for i in range(nb_data)]
+        vectors_original = solve_regression(g, group_element_list, field_list, sigma0, sigma1, points, eval_kernel)
         vectors_original_struct = struct.get_structured_vectors_from_concatenated(vectors_original, nb_points, dim)
         original = struct.create_structured(points, vectors_original_struct)
 
-    return [original, signed_group_element_list]
+    return [original, group_element_list]
 
 
 #

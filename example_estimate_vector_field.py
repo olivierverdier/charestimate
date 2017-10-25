@@ -25,6 +25,8 @@ import calibration as cali
 import regression as reg
 import action as act
 import group
+import accessors as acc
+import structured_vector_fields as struct
 # We suppose that we have a list of vector fields vector_field_list
 
 #%%
@@ -82,10 +84,14 @@ if False:
 g = group.ScaleDisplacement
 solve_regression = reg.solve_regression
 calibration = cali.calibrate
-def action(signed_group_element, structured_field):
-    act.apply_element_to_field(g, signed_group_element, structured_field)
+def action(group_element, structured_field):
+    return act.apply_element_to_field(g, acc.create_signed_element(1, group_element), structured_field)
+
+def product(vect0, vect1):
+    return struct.scalar_product_structured(vect0, vect1, kernel)
 
 
+pairing = struct.scalar_product_unstructured
 sigma0 = 1
 sigma1 = 10
 
@@ -93,7 +99,9 @@ nb_iteration = 10
 field_list = copy.deepcopy(vectorfield_list_center)
 
 
-result = scheme.iterative_scheme(solve_regression, calibration, action, g, kernel, vectorfield_list_center, sigma0, sigma1, points, nb_iteration)
+result = scheme.iterative_scheme(solve_regression, calibration, action, g,
+                                 kernel, vectorfield_list_center, sigma0,
+                                 sigma1, points, nb_iteration)
 
 
 
