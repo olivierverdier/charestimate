@@ -3,6 +3,8 @@ import group
 sd = group.ScaleDisplacement
 import action
 
+import accessors as acc
+
 import structured_vector_fields
 
 def apply_element_to_field_old(signed_group_element, structured_field):
@@ -17,11 +19,11 @@ def apply_element_to_field_old(signed_group_element, structured_field):
     vectors = structured_vector_fields.get_vectors(structured_field)
     dim, nb_points = vectors.shape
 
-    group_element = get_group_element(signed_group_element)
-    epsilon = get_sign(signed_group_element)
-    lam = get_scale(group_element)
+    group_element = acc.get_group_element(signed_group_element)
+    epsilon = acc.get_sign(signed_group_element)
+    lam = acc.get_scale(group_element)
 
-    displacement = get_rigid(group_element)
+    displacement = acc.get_rigid(group_element)
     transformed_points = np.dot(displacement, points)
     transformed_vectors = np.dot(group.Displacement.get_rotation(displacement), vectors)
 
