@@ -37,8 +37,7 @@ def compute_velocity(original, group, action, discrepancy):
     def loss_array(velocity_array):
         velocity_element= (velocity_array[0], (velocity_array[1], velocity_array[2], velocity_array[3]))
         return loss(velocity_element)
-    best =sopt.minimize(loss_array, np.array([0,0,0,0]))
-    #best = sopt.minimize(loss, group.zero_velocity)
+    best = sopt.minimize(loss, group.zero_velocity)
     return best
 
 def calibrate(original, noisy, group, action, product, pairing):

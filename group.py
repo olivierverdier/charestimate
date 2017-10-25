@@ -27,7 +27,7 @@ class Translation():
     def __init__(self, space):
         self.space = space
 
-    def exponential(velocity):
+    def exponential(self, velocity):
         return velocity
     zero_velocity = np.array([0.0])
 
