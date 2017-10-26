@@ -42,6 +42,9 @@ class Translation():
     def apply_differential(self, group_element, vectors):
         return vectors
 
+    def apply_differential_transpose(self, group_element, vectors):
+        return vectors
+
 class Displacement(ContinuousGroup):
     zero_velocity = np.array([0, 0, 0])
     identity = np.identity(3)
