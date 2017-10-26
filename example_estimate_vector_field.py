@@ -29,7 +29,7 @@ import accessors as acc
 import structured_vector_fields as struct
 # We suppose that we have a list of vector fields vector_field_list
 
-#%%
+##%%
 ## Set parameters
 # Size of dataset
 size = 10
@@ -41,11 +41,11 @@ sigmanoise=0.2
 # scale of the kernel
 sigma_kernel=0.3
 fac=2
-xmin=-2.2
-xmax=3.2
+xmin=-3
+xmax=4
 dx=round((xmax-xmin)/(fac*sigma_kernel))
-ymin=-2.0
-ymax=2.0
+ymin=-3
+ymax=3.0
 dy=round((ymax-ymin)/(fac*sigma_kernel))
 points=[]
 for i in range(dx+1):
@@ -79,13 +79,13 @@ if False:
     vectorfield_list_center[0].show()
     plt.plot(points[0], points[1],'x')
 
-#%%
+##%%
 
 g = group.ScaleDisplacement
 solve_regression = reg.solve_regression
 calibration = cali.calibrate
 def action(group_element, structured_field):
-    return act.apply_element_to_field(g, acc.create_signed_element(1, group_element), structured_field)
+    return act.apply_element_to_field(g, group_element, structured_field)
 
 def product(vect0, vect1):
     return struct.scalar_product_structured(vect0, vect1, kernel)
@@ -103,6 +103,10 @@ result = scheme.iterative_scheme(solve_regression, calibration, action, g,
                                  kernel, vectorfield_list_center, sigma0,
                                  sigma1, points, nb_iteration)
 
+#%%
+
+get_unstructured_op = struct.get_from_structured_to_unstructured(space, kernel)
+vect_field_ref = get_unstructured_op(result[0])
 
 
-
+np.savetxt('/home/bgris/DeformationModulesODL/deform/vect_field_rotation_SheppLogan_scheme_sigma_0_3__nbtrans_72',vect_field_ref)

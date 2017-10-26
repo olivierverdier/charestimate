@@ -36,6 +36,7 @@ def iterative_scheme(solve_regression, calibration, action, g, kernel, field_lis
         vectors_original = solve_regression(g, group_element_list, field_list, sigma0, sigma1, points, eval_kernel)
         vectors_original_struct = struct.get_structured_vectors_from_concatenated(vectors_original, nb_points, dim)
         original = struct.create_structured(points, vectors_original_struct)
+        print('iteration {}'.format(k))
 
     return [original, group_element_list]
 
