@@ -97,6 +97,17 @@ sigma1 = 10
 
 nb_iteration = 10
 field_list = copy.deepcopy(vectorfield_list_center)
+##%%
+
+def calibration(original, noisy, group, action, product, pairing):
+    """
+    Main calibration function.
+    """
+
+    discrepancy = make_discrepancy_from(noisy, product, pairing)
+    velocity = compute_velocity(original, group, action, discrepancy)
+    return velocity
+
 
 
 result = scheme.iterative_scheme(solve_regression, calibration, action, g,
