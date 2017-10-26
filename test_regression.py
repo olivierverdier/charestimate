@@ -74,6 +74,9 @@ def test_solve_regression():
     signed_group_element0=(1, sd.exponential(infinitesimal0))
     signed_group_element1=(-1, sd.exponential(infinitesimal1))
 
+    group_element0= sd.exponential(infinitesimal0)
+    group_element1= sd.exponential(infinitesimal1)
+
     angle= np.pi/2
     infinitesimal2 = (0.5, (angle, 1, -1))
     signed_group_element2=(1, sd.exponential(infinitesimal2))
@@ -114,17 +117,18 @@ def test_solve_regression():
     np_pts_b=len(points_b.T)
 
     signed_group_element_list= [signed_group_element0, signed_group_element1, signed_group_element2]
+    group_element_list= [group_element0, group_element1, group_element2]
     field_list=[vector_field0, vector_field1, vector_field2]
 
     eval_kernel_a=[[kernel(points_a[:,i], points_a[:,j]) for i in range(np_pts_a)] for j in range(np_pts_a)]
     eval_kernel_b=[[kernel(points_b[:,i], points_b[:,j]) for i in range(np_pts_b)] for j in range(np_pts_b)]
 
     g = group.ScaleDisplacement()
-    alpha_est0 = reg.solve_regression(g, signed_group_element_list, field_list, sigma0, sigma1, points_a, eval_kernel_a)
-    alpha_est1 = reg.solve_regression(g, signed_group_element_list, field_list, sigma0, sigma1, points_b, eval_kernel_b)
+    alpha_est0 = reg.solve_regression(g, group_element_list, field_list, sigma0, sigma1, points_a, eval_kernel_a)
+    alpha_est1 = reg.solve_regression(g, group_element_list, field_list, sigma0, sigma1, points_b, eval_kernel_b)
 
-    alpha_est0_old = solve_regression_old(signed_group_element_list, field_list, sigma0, sigma1, points_a, eval_kernel_a)
-    alpha_est1_old = solve_regression_old(signed_group_element_list, field_list, sigma0, sigma1, points_b, eval_kernel_b)
+    alpha_est0_old = solve_regression_old(group_element_list, field_list, sigma0, sigma1, points_a, eval_kernel_a)
+    alpha_est1_old = solve_regression_old(group_element_list, field_list, sigma0, sigma1, points_b, eval_kernel_b)
 
     print('alpha0 expected without regularization [1, 0]')
     print('alpha_est0_old ={} '.format(alpha_est0_old))
