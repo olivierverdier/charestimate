@@ -30,6 +30,7 @@ class Translation():
     def exponential(self, velocity):
         return velocity
     zero_velocity = np.array([0.0])
+    identity = np.array([0.0])
 
     def apply(self, translation, points):
         dim, nb_points = points.shape
