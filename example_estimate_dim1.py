@@ -169,7 +169,7 @@ data_list = []
 nb_data = 10
 translation_list = np.random.uniform(low=-1.0, high=1.0, size = nb_data)
 covariance_matrix = struct.make_covariance_matrix(space.points().T, kernel_generate)
-noise_l2 =  odl.phantom.noise.white_noise(odl.ProductSpace(space, nb_data))*0.05
+noise_l2 =  odl.phantom.noise.white_noise(odl.ProductSpace(space, nb_data))*0.01
 decomp = np.linalg.cholesky(covariance_matrix + 1e-4 * np.identity(len(covariance_matrix)))
 noise_rkhs = [np.dot(decomp, noise_l2[i]) for i in range(nb_data)]
 pts_space=space.points().T
@@ -195,9 +195,9 @@ data_list = [space.tangent_bundle.element(get_unstructured_op_generate(action(np
 #    data_list_bis[i].show('bis' + str(i))
 ##    space.element(noise_rkhs[i]).show()
 ###
-##
-#for i in range(nb_data):
-#    data_list_bis[i].show('bis' + str(i))
+#
+for i in range(nb_data):
+    data_list_noisy[i].show('bis' + str(i))
 ##    space.element(noise_rkhs[i]).show()
 ##
 #%%
@@ -206,7 +206,7 @@ nb_iteration = 20
 points = np.array(points_list).T
 # first raw estimation
 result = scheme.iterative_scheme(solve_regression, calibration, action, g,
-                                 kernel, data_list, sigma0,
+                                 kernel, data_list_noisy, sigma0,
                                  sigma1, points, nb_iteration)
 #pts_space=space.points().T
 #data_displaced = []
@@ -223,6 +223,26 @@ result = scheme.iterative_scheme(solve_regression, calibration, action, g,
 original_computed_unstructured = get_unstructured_op(result[0])
 original_computed_unstructured.show()
 original_unstructured.show()
+
+#%%
+velo0 = calibration(original, original_computed_unstructured, g, action, product, pairing)
+velo1 = calibration_init(original, original_computed_unstructured, g, action, product, pairing)
+depl = action(g.exponential(velo), original)
+
+
+velo0 = calibration(original, data_list[1], g, action, product, pairing)
+velo1 = calibration_init(original, original_computed_unstructured, g, action, product, pairing)
+get_unstructured_op_generate(original).show()
+data_list[1].show()
+
+
+depl_computed_unstructured = get_unstructured_op_generate(depl)
+(depl_computed_unstructured - original_computed_unstructured).show()
+
+fig = (depl_computed_unstructured - original_computed_unstructured).show()
+depl_computed_unstructured.show()
+
+((depl_computed_unstructured - original_computed_unstructured)**2 / (original_computed_unstructured ** 2)).show()
 #%%
 #np.savetxt('/home/bgris/DeformationModulesODL/deform/vect_field_rotation_SheppLogan_scheme_sigma_0_3__nbtrans_72',vect_field_ref)
 
