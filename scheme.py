@@ -29,6 +29,7 @@ def iterative_scheme(solve_regression, calibration, action, g, kernel, field_lis
     vectors_original = solve_regression(g, [group_element_init], [field_list[0]], sigma0, sigma1, points, eval_kernel)
     vectors_original_struct = struct.get_structured_vectors_from_concatenated(vectors_original, nb_points, dim)
     original = struct.create_structured(points, vectors_original_struct)
+    get_unstructured_op = struct.get_from_structured_to_unstructured(field_list[0].space[0], kernel)
 
     for k in range(nb_iteration):
         velocity_list = calibrate_list(original, field_list, g, action, product, struct.scalar_product_unstructured, calibration)
@@ -37,6 +38,7 @@ def iterative_scheme(solve_regression, calibration, action, g, kernel, field_lis
         vectors_original_struct = struct.get_structured_vectors_from_concatenated(vectors_original, nb_points, dim)
         original = struct.create_structured(points, vectors_original_struct)
         print('iteration {}'.format(k))
+        get_unstructured_op(original).show()
 
     return [original, group_element_list]
 
