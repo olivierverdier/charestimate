@@ -47,7 +47,7 @@ size = 10
 sigmanoise=0.2
 
 # scale of the kernel
-sigma_kernel=0.05
+sigma_kernel=0.1
 fac=1
 xmin=-1
 xmax=1 - fac * sigma_kernel
@@ -64,7 +64,7 @@ nbtrans=round(len(points_list))
 
 space=odl.uniform_discr(
 min_pt=[-1], max_pt=[1], shape=[128],
-dtype='float32', interp='linear')
+dtype='float32', interp='nearest')
 extent = space.max_pt[0] - space.min_pt[0]
 
 proj = group.projection_periodicity(space)
@@ -101,9 +101,8 @@ def product(vect0, vect1):
     return struct.scalar_product_structured(vect0, vect1, kernel)
 
 
+
 pairing = struct.scalar_product_unstructured
-sigma0 = 1
-sigma1 = 10
 
 #%% define calibration
 get_unstructured_op = struct.get_from_structured_to_unstructured(space, kernel)
@@ -144,19 +143,6 @@ get_unstructured_op = struct.get_from_structured_to_unstructured(space, kernel)
 
 get_unstructured_op_generate = struct.get_from_structured_to_unstructured(space, kernel_generate)
 
-def calibration_init(original, noisy, group, action, product, pairing):
-    """
-    Main calibration function.
-    """
-    norm_original = get_unstructured_op_generate(original).norm()
-    diff = np.abs(noisy) - np.abs(get_unstructured_op_generate(original))
-    ide = space.element(space.points())
-    return proj(ide.inner(space.element(diff)) / norm_original)
-
-def calibration(original, noisy, group, action, product, pairing):
-    result = cali.calibrate(original, noisy, group, action, product, pairing)
-    return result.x
-
 
 #%% define data
 
@@ -169,7 +155,7 @@ data_list = []
 nb_data = 10
 translation_list = np.random.uniform(low=-1.0, high=1.0, size = nb_data)
 covariance_matrix = struct.make_covariance_matrix(space.points().T, kernel_generate)
-noise_l2 =  odl.phantom.noise.white_noise(odl.ProductSpace(space, nb_data))*0.01
+noise_l2 =  odl.phantom.noise.white_noise(odl.ProductSpace(space, nb_data))*0.1
 decomp = np.linalg.cholesky(covariance_matrix + 1e-4 * np.identity(len(covariance_matrix)))
 noise_rkhs = [np.dot(decomp, noise_l2[i]) for i in range(nb_data)]
 pts_space=space.points().T
@@ -196,16 +182,40 @@ data_list = [space.tangent_bundle.element(get_unstructured_op_generate(action(np
 ##    space.element(noise_rkhs[i]).show()
 ###
 #
-for i in range(nb_data):
-    data_list_noisy[i].show('bis' + str(i))
+#for i in range(nb_data):
+#    data_list_noisy[i].show('bis' + str(i))
 ##    space.element(noise_rkhs[i]).show()
 ##
 #%%
+
+#TODO : change the following for new calibration type
+#def calibration_init(original, noisy, group, action, product, pairing):
+#    """
+#    Main calibration function.
+#    """
+#    norm_original = get_unstructured_op_generate(original).norm()
+#    diff = np.abs(noisy) - np.abs(get_unstructured_op_generate(original))
+#    ide = space.element(space.points())
+#    return proj(ide.inner(space.element(diff)) / norm_original)
+#
+#def calibration(original, noisy, group, action, product, pairing):
+#    result = cali.calibrate(original, noisy, group, action, product, pairing)
+#    return result.x
+
+def calibration_equation(original, noisy):
+    result = cali.calibrate_equation_1D_translation(original, noisy, space, kernel)
+    return result
+
+
+
+sigma0 = 1
+sigma1 = 500
+
 dim = 1
 nb_iteration = 20
 points = np.array(points_list).T
 # first raw estimation
-result = scheme.iterative_scheme(solve_regression, calibration, action, g,
+result = scheme.iterative_scheme(solve_regression, calibration_equation, action, g,
                                  kernel, data_list_noisy, sigma0,
                                  sigma1, points, nb_iteration)
 #pts_space=space.points().T
@@ -221,10 +231,55 @@ result = scheme.iterative_scheme(solve_regression, calibration, action, g,
 #%%
 
 original_computed_unstructured = get_unstructured_op(result[0])
-original_computed_unstructured.show()
-original_unstructured.show()
+#data_list_noisy[0][0].show('initialisation')
+#original_computed_unstructured.show('result')
+#original_unstructured.show('original')
+
+plt.plot(space.points().T[0], data_list_noisy[0][0].asarray(), label = 'data noisy 0 ')
+#plt.ylabel('init')
+plt.axis([-1,1,0,1])
+
+
+plt.plot(space.points().T[0], original_computed_unstructured[0].asarray(), label = 'computed regressed')
+#plt.ylabel('result')
+#plt.axis([-1,1,0,1])
+
+
+plt.plot(space.points().T[0], original_unstructured[0].asarray(), label = 'original')
+#plt.ylabel('original')
+plt.axis([-1,1,0,1])
+plt.legend()
+
 
 #%%
+result_unstruc = get_unstructured_op(result[0])
+original_unstructured = get_unstructured_op_generate(original)
+velo = calibration_equation(result[0], original_unstructured)
+computed = action(g.exponential(velo), result[0])
+result_unstruc_i = get_unstructured_op(computed)
+plt.figure()
+plt.plot(space.points().T[0], original_unstructured[0].asarray(), label = 'ground truth')
+plt.plot(space.points().T[0], result_unstruc_i[0].asarray(), label = 'result calibrated')
+plt.plot(space.points().T[0], result_unstruc[0].asarray(), label = 'result ')
+plt.legend()
+
+
+
+#%%
+result_unstruc = get_unstructured_op(result[0])
+
+for i in range(nb_data):
+    velo = calibration_equation(result[0], data_list_noisy[i])
+    computed = action(g.exponential(velo), result[0])
+    result_unstruc_i = get_unstructured_op(computed)
+    plt.figure()
+    plt.plot(space.points().T[0], data_list_noisy[i][0].asarray(), label = 'data')
+    plt.plot(space.points().T[0], result_unstruc_i[0].asarray(), label = 'result calibrated')
+    plt.plot(space.points().T[0], result_unstruc[0].asarray(), label = 'result ')
+    plt.legend()
+#
+#%%
+
 velo0 = calibration(original, original_computed_unstructured, g, action, product, pairing)
 velo1 = calibration_init(original, original_computed_unstructured, g, action, product, pairing)
 depl = action(g.exponential(velo), original)
@@ -244,9 +299,24 @@ depl_computed_unstructured.show()
 
 ((depl_computed_unstructured - original_computed_unstructured)**2 / (original_computed_unstructured ** 2)).show()
 #%%
-#np.savetxt('/home/bgris/DeformationModulesODL/deform/vect_field_rotation_SheppLogan_scheme_sigma_0_3__nbtrans_72',vect_field_ref)
+test0=get_unstructured_op(original)
+plt.plot(space.points().T[0], test0[0].asarray(), label = 'original regression')
 
-
+plt.plot(space.points().T[0],vect_field_list[0][0].asarray(), label = 'data')
+plt.axis([-1,1,0,1])
+plt.legend()
+#%%
+ori_unstruc = get_unstructured_op(original)
+for i in range(nb_data):
+    computed = action(group_element_list[i],original)
+    result_unstruc_i = get_unstructured_op(computed)
+    plt.figure()
+    plt.plot(space.points().T[0], data_list_noisy[i][0].asarray(), label = 'data')
+    #plt.plot(space.points().T[0], result_unstruc_i[0].asarray(), label = 'result calibrated')
+    plt.plot(space.points().T[0], ori_unstruc[0].asarray(), label = 'ori ')
+    plt.legend()
+#
+#%%
 #
 ##%%
 #eval_kernel = struct.make_covariance_matrix(points, kernel)
