@@ -157,6 +157,7 @@ def make_product(G1, G2):
 
 
 ScaleDisplacement = make_product(Scaling, Displacement)
+ScaleTranslation = make_product(Scaling, Translation)
 
 
 def sinc(x):
