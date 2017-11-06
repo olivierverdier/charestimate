@@ -11,9 +11,9 @@ import structured_vector_fields as struct
 import calibration as calib
 import accessors as acc
 
-def calibrate_list(original, field_list, g, action, product, pairing, calibration):
+def calibrate_list(original, field_list, calibration):
     nb_data = len(field_list)
-    group_element_list = [calibration(original, field_list[i], g, action, product, pairing) for i in range(nb_data)]
+    group_element_list = [calibration(original, field_list[i]) for i in range(nb_data)]
     return group_element_list
 
 
@@ -32,7 +32,7 @@ def iterative_scheme(solve_regression, calibration, action, g, kernel, field_lis
     get_unstructured_op = struct.get_from_structured_to_unstructured(field_list[0].space[0], kernel)
 
     for k in range(nb_iteration):
-        velocity_list = calibrate_list(original, field_list, g, action, product, struct.scalar_product_unstructured, calibration)
+        velocity_list = calibrate_list(original, field_list, calibration)
         group_element_list = [g.exponential(velocity_list[i]) for i in range(nb_data)]
         vectors_original = solve_regression(g, group_element_list, field_list, sigma0, sigma1, points, eval_kernel)
         vectors_original_struct = struct.get_structured_vectors_from_concatenated(vectors_original, nb_points, dim)
