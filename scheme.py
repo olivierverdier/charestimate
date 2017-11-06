@@ -30,6 +30,7 @@ def iterative_scheme(solve_regression, calibration, action, g, kernel, field_lis
     vectors_original_struct = struct.get_structured_vectors_from_concatenated(vectors_original, nb_points, dim)
     original = struct.create_structured(points, vectors_original_struct)
     get_unstructured_op = struct.get_from_structured_to_unstructured(field_list[0].space[0], kernel)
+    get_unstructured_op(original).show('initialisation')
 
     for k in range(nb_iteration):
         velocity_list = calibrate_list(original, field_list, calibration)
@@ -38,7 +39,7 @@ def iterative_scheme(solve_regression, calibration, action, g, kernel, field_lis
         vectors_original_struct = struct.get_structured_vectors_from_concatenated(vectors_original, nb_points, dim)
         original = struct.create_structured(points, vectors_original_struct)
         print('iteration {}'.format(k))
-        get_unstructured_op(original).show()
+        get_unstructured_op(original).show('iteration {}'.format(k))
 
     return [original, group_element_list]
 
