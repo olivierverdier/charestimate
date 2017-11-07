@@ -106,7 +106,7 @@ class Scaling(ContinuousGroup):
 
     @classmethod
     def exponential(self, velocity):
-        return np.exp(velocity)
+        return np.array(np.exp(velocity))
 
     @classmethod
     def apply(self, group_element, points):
@@ -157,7 +157,9 @@ def make_product(G1, G2):
 
 
 ScaleDisplacement = make_product(Scaling, Displacement)
-ScaleTranslation = make_product(Scaling, Translation)
+
+def ScaleTranslation(space):
+    return make_product(Scaling, Translation(space))
 
 
 def sinc(x):
