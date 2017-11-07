@@ -76,3 +76,31 @@ def calibrate_equation_1D_translation(original, noisy, space, kernel):
     return g
 
 
+def calibrate_equation(original, noisy, space, kernel, fun_op):
+    """
+    'function' is a class that has several method :
+
+     - 'function' which is a function between between the space of vector fields (to which
+    noisy belongs) and another vector space W on which the group also acts.
+     - 'function_structured' is the same function but acting on structured
+    vector fields
+     - 'solver' that returns, given w1 and w2, the group element g such that
+       w2 = g.w1 or more generally the group element that minimizes
+       |w2 - g.w1|_W
+
+
+    'calibrate_equation' computes calibration thanks to a function that is
+    invariant under the group action :
+        g.function = g(function(g^-1)) = function \forall g \in g
+
+    """
+
+    function = fun_op(space, kernel)
+    w_noisy = function.function(noisy)
+    w_original = function.function_structured(original)
+
+    g = function.solver(w_original, w_noisy)
+
+    return g
+
+
