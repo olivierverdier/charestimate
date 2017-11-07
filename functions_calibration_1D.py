@@ -114,7 +114,7 @@ class function_1D_scalingtranslation():
         lam = np.log(norm2 / norm1)
         translation = cmath.phase(w2 / w1) * self.extent / (2 * np.pi)
 
-        return np.array([[lam], [translation]])
+        return np.array([lam, translation])
 
 
 
