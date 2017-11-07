@@ -47,7 +47,7 @@ size = 10
 sigmanoise=0.2
 
 # scale of the kernel
-sigma_kernel=0.1
+sigma_kernel=0.3
 fac=1
 xmin=-1
 xmax=1 - fac * sigma_kernel
@@ -147,8 +147,9 @@ get_unstructured_op_generate = struct.get_from_structured_to_unstructured(space,
 #%% define data
 
 dim = 1
-points_truth = np.array([[-0.6, 0.0, 0.2, 0.5,]])
-vectors_truth = np.array([[0.3, 0.0, 0, 1,]])
+nb_pt_generate = 3
+points_truth = np.random.uniform(low=-1.0, high=1.0, size = nb_pt_generate)
+vectors_truth = np.random.uniform(low=-1.0, high=1.0, size = nb_pt_generate)
 original = struct.create_structured(points_truth, vectors_truth)
 original_unstructured = get_unstructured_op_generate(original)
 data_list = []
@@ -212,7 +213,7 @@ sigma0 = 1
 sigma1 = 500
 
 dim = 1
-nb_iteration = 20
+nb_iteration = 30
 points = np.array(points_list).T
 # first raw estimation
 result = scheme.iterative_scheme(solve_regression, calibration_equation, action, g,
@@ -228,7 +229,23 @@ result = scheme.iterative_scheme(solve_regression, calibration_equation, action,
 #for i in range(nb_data):
 #    data_displaced[i].show()
 #
-#%%
+
+
+#%% Compare ground truth and result
+result_unstruc = get_unstructured_op(result[0])
+original_unstructured = get_unstructured_op_generate(original)
+velo = calibration_equation(result[0], original_unstructured)
+computed = action(g.exponential(velo), result[0])
+result_unstruc_i = get_unstructured_op(computed)
+plt.figure()
+plt.plot(space.points().T[0], original_unstructured[0].asarray(), label = 'ground truth')
+plt.plot(space.points().T[0], result_unstruc_i[0].asarray(), label = 'result calibrated')
+plt.plot(space.points().T[0], result_unstruc[0].asarray(), label = 'result ')
+plt.legend()
+
+
+
+#%% compare result and initialisation
 
 original_computed_unstructured = get_unstructured_op(result[0])
 #data_list_noisy[0][0].show('initialisation')
@@ -251,21 +268,7 @@ plt.axis([-1,1,0,1])
 plt.legend()
 
 
-#%%
-result_unstruc = get_unstructured_op(result[0])
-original_unstructured = get_unstructured_op_generate(original)
-velo = calibration_equation(result[0], original_unstructured)
-computed = action(g.exponential(velo), result[0])
-result_unstruc_i = get_unstructured_op(computed)
-plt.figure()
-plt.plot(space.points().T[0], original_unstructured[0].asarray(), label = 'ground truth')
-plt.plot(space.points().T[0], result_unstruc_i[0].asarray(), label = 'result calibrated')
-plt.plot(space.points().T[0], result_unstruc[0].asarray(), label = 'result ')
-plt.legend()
-
-
-
-#%%
+#%% Compare result with all data
 result_unstruc = get_unstructured_op(result[0])
 
 for i in range(nb_data):
@@ -279,42 +282,42 @@ for i in range(nb_data):
     plt.legend()
 #
 #%%
-
-velo0 = calibration(original, original_computed_unstructured, g, action, product, pairing)
-velo1 = calibration_init(original, original_computed_unstructured, g, action, product, pairing)
-depl = action(g.exponential(velo), original)
-
-
-velo0 = calibration(original, data_list[1], g, action, product, pairing)
-velo1 = calibration_init(original, original_computed_unstructured, g, action, product, pairing)
-get_unstructured_op_generate(original).show()
-data_list[1].show()
-
-
-depl_computed_unstructured = get_unstructured_op_generate(depl)
-(depl_computed_unstructured - original_computed_unstructured).show()
-
-fig = (depl_computed_unstructured - original_computed_unstructured).show()
-depl_computed_unstructured.show()
-
-((depl_computed_unstructured - original_computed_unstructured)**2 / (original_computed_unstructured ** 2)).show()
-#%%
-test0=get_unstructured_op(original)
-plt.plot(space.points().T[0], test0[0].asarray(), label = 'original regression')
-
-plt.plot(space.points().T[0],vect_field_list[0][0].asarray(), label = 'data')
-plt.axis([-1,1,0,1])
-plt.legend()
-#%%
-ori_unstruc = get_unstructured_op(original)
-for i in range(nb_data):
-    computed = action(group_element_list[i],original)
-    result_unstruc_i = get_unstructured_op(computed)
-    plt.figure()
-    plt.plot(space.points().T[0], data_list_noisy[i][0].asarray(), label = 'data')
-    #plt.plot(space.points().T[0], result_unstruc_i[0].asarray(), label = 'result calibrated')
-    plt.plot(space.points().T[0], ori_unstruc[0].asarray(), label = 'ori ')
-    plt.legend()
+#
+#velo0 = calibration(original, original_computed_unstructured, g, action, product, pairing)
+#velo1 = calibration_init(original, original_computed_unstructured, g, action, product, pairing)
+#depl = action(g.exponential(velo), original)
+#
+#
+#velo0 = calibration(original, data_list[1], g, action, product, pairing)
+#velo1 = calibration_init(original, original_computed_unstructured, g, action, product, pairing)
+#get_unstructured_op_generate(original).show()
+#data_list[1].show()
+#
+#
+#depl_computed_unstructured = get_unstructured_op_generate(depl)
+#(depl_computed_unstructured - original_computed_unstructured).show()
+#
+#fig = (depl_computed_unstructured - original_computed_unstructured).show()
+#depl_computed_unstructured.show()
+#
+#((depl_computed_unstructured - original_computed_unstructured)**2 / (original_computed_unstructured ** 2)).show()
+##%%
+#test0=get_unstructured_op(original)
+#plt.plot(space.points().T[0], test0[0].asarray(), label = 'original regression')
+#
+#plt.plot(space.points().T[0],vect_field_list[0][0].asarray(), label = 'data')
+#plt.axis([-1,1,0,1])
+#plt.legend()
+##%%
+#ori_unstruc = get_unstructured_op(original)
+#for i in range(nb_data):
+#    computed = action(group_element_list[i],original)
+#    result_unstruc_i = get_unstructured_op(computed)
+#    plt.figure()
+#    plt.plot(space.points().T[0], data_list_noisy[i][0].asarray(), label = 'data')
+#    #plt.plot(space.points().T[0], result_unstruc_i[0].asarray(), label = 'result calibrated')
+#    plt.plot(space.points().T[0], ori_unstruc[0].asarray(), label = 'ori ')
+#    plt.legend()
 #
 #%%
 #
