@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Nov  7 15:48:36 2017
+Created on Tue Nov  7 18:23:12 2017
 
 @author: bgris
 """
@@ -37,18 +37,107 @@ import structured_vector_fields as struct
 import functions_calibration_2D as func_2D
 
 
+#%% Generate data
+
+# Size of dataset
+size = 10
+space=odl.uniform_discr(
+min_pt=[-16, -16], max_pt=[16, 16], shape=[512,512],
+dtype='float32', interp='linear')
+data_list=[]
+path='/home/bgris/data/SheppLoganRotationSmallDef/vectfield512/'
+name='vectfield_smalldef_sigma_0_3'
+name_i=path + name + '_0'
+original = space.tangent_bundle.element(np.loadtxt(name_i)).copy()
+
+# rotations of the initial data
+
+
+#%%
+
+maxx=5.0
+minx = -5
+miny=-5
+maxy=5
+
+theta=np.pi/3
+centre=np.array([0,0])
+
+points=space.points()
+
+def Rtheta(theta,points):
+    # theta is the angle, in rad
+    # input = list of points, for ex given by space.points() or
+    # np.array(vect_field).T
+    #output = list of points of same size, rotated of an angle theta
+
+    points_rot=np.empty_like(points).T
+    points_rot[0]=np.cos(theta)*points.T[0].copy() - np.sin(theta)*points.T[1].copy()
+    points_rot[1]=np.sin(theta)*points.T[0].copy() + np.cos(theta)*points.T[1].copy()
+
+    return points_rot.T.copy()
+    points.T[0]
+
+def Rot_vect_field_cache(minx,maxx,miny,maxy,theta,centre,vect_field):
+    v1=space.tangent_bundle.element()
+    for i in range(len(points)):
+        #print(str(i))
+        pt=points[i]
+        if(pt[0]>minx and pt[0] < maxx and pt[1]>miny and pt[1]<maxy):
+
+            pt_rot_inv=Rtheta(-theta,pt-centre).copy()
+            valx = vect_field[0].interpolation([[pt_rot_inv[0]+centre[0]],[pt_rot_inv[1]+centre[1]]])
+            valy = vect_field[1].interpolation([[pt_rot_inv[0]+centre[0]],[pt_rot_inv[1]+centre[1]]])
+
+            v1[0][i] = np.cos(theta) * valx - np.sin(theta) * valy
+            v1[1][i] = np.sin(theta) * valx + np.cos(theta) * valy
+
+        else:
+            v1[0][i]=vect_field[0][i]
+            v1[1][i]=vect_field[1][i]
+
+    return v1
+
+
+v1=Rot_vect_field_cache(minx,maxx,miny,maxy,theta,centre,original)
+v2 = Rot_vect_field_cache(minx,maxx,miny,maxy,-theta,centre,v1)
+original.show('original')
+v1.show('rotated')
+(original - v2).show('difference')
+#%%
+theta_list=[0 , 15, -20, 30, -50, 45, -10, 20, -30]
+theta_list=[0 , 10, 20, 30, 40, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180]
+theta_list=np.pi*np.array([0 , 0.1, 0.1, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 , 1.0, 1.1, 1.2, 1.3, 1.4, 1.5])
+nb_data=len(theta_list)
+theta_dec=0.05*np.pi
+images_source=[]
+images_target=[]
+for i in range(size):
+    vect_field_rot
+    images_source.append(Rot_image_cache(minx,maxx,miny,maxy,theta_list[i],centre,template).copy())
+    images_target.append(Rot_image_cache(minx,maxx,miny,maxy,theta_list[i]+theta_dec,centre,template).copy())
+#
+
+
+
+
+data_list = []
+
+for i in range(size):
+
+
 
 #
 #%% Set parameters kernel and control points
 
 # scale of the kernel
-sigma_kernel=1
+sigma_kernel=0.3
 fac=0.5
-xmin=-6
-xmax=6
+xmin=-5
+xmax=5
 dx=round((xmax-xmin)/(fac*sigma_kernel))
-ymin=-6.0
-ymax=6.0
+ymin=-5.0
+ymax=5.0
 dy=round((ymax-ymin)/(fac*sigma_kernel))
 points_list=[]
 for i in range(dx+1):
@@ -83,10 +172,6 @@ def product(vect0, vect1):
 
 pairing = struct.scalar_product_unstructured
 
-space=odl.uniform_discr(
-min_pt=[-16, -16], max_pt=[16, 16], shape=[128,128],
-dtype='float32', interp='linear')
-
 # define calibration
 get_unstructured_op = struct.get_from_structured_to_unstructured(space, kernel)
 
@@ -97,60 +182,6 @@ def calibration_equation(original, noisy):
     return result
 
 calibration = calibration_equation
-
-
-get_unstructured_op_generate = get_unstructured_op
-
-#%% Generate data
-
-# Size of dataset
-nb_data = 10
-points_list = np.array(points_list)
-
-fac=1
-xmin=-3
-xmax=3
-dx=round((xmax-xmin)/(fac*sigma_kernel))
-ymin=-3.0
-ymax=3.0
-dy=round((ymax-ymin)/(fac*sigma_kernel))
-points_list_gen=[]
-for i in range(dx+1):
-    for j in range(dy+1):
-        points_list_gen.append([xmin +fac*sigma_kernel* i*1.0, ymin + fac*sigma_kernel*j*1.0])
-
-points_list_gen = np.array(points_list_gen)
-nb_pts_gen = len(points_list_gen)
-vectors_truth = np.random.uniform(low=-1.0, high=1.0, size = [2, nb_pts_gen])
-original = struct.create_structured(points_list_gen.T, vectors_truth)
-original_unstructured = get_unstructured_op(original)
-
-
-
-data_list = []
-nb_data = 10
-translation_list = np.random.uniform(low=-1.0, high=1.0, size = [2, nb_data])
-scaling_list = np.abs(np.random.normal(1, 1, nb_data)) #1. + np.zeros(nb_data)
-theta_list = np.random.uniform(low=-np.pi, high=np.pi, size = nb_data)
-param_transfor_list=np.array([ g.exponential(np.array([scaling_list[i], theta_list[i], translation_list[0, i], translation_list[1, i] ]))  for i in range(nb_data)])
-
-#covariance_matrix = struct.make_covariance_matrix(space.points().T, kernel)
-#noise_l2 =  odl.phantom.noise.white_noise(odl.ProductSpace(space, nb_data))*0.1
-#decomp = np.linalg.cholesky(covariance_matrix + 1e-4 * np.identity(len(covariance_matrix)))
-#noise_rkhs = [np.dot(decomp, noise_l2[i]) for i in range(nb_data)]
-#pts_space=space.points().T
-#data_list=[]
-#for i in range(nb_data):
-#    pts_displaced = g.apply(np.array([-translation_list[i]]), pts_space)
-#    data_list.append(space.tangent_bundle.element([original_unstructured[u].interpolation(pts_displaced) for u in range(dim)]))
-
-
-
-#data_list_noisy = [space.tangent_bundle.element(get_unstructured_op_generate(action(np.array(param_transfor_list[i]), original)) + noise_rkhs[i]) for i in range(nb_data)]
-data_list = [space.tangent_bundle.element(get_unstructured_op_generate(action(np.array(param_transfor_list[i]), original))) for i in range(nb_data)]
-
-
-
 
 #%%
 
@@ -167,28 +198,16 @@ result = scheme.iterative_scheme(solve_regression, calibration_equation, action,
                                  kernel, data_list, sigma0,
                                  sigma1, points, nb_iteration)
 #
-#%% Compare reult with ground truth
-
-result_unstruc = get_unstructured_op(result[0])
-original_unstructured = get_unstructured_op_generate(original)
-velo = calibration_equation(result[0], original_unstructured)
-computed = action(g.exponential(velo), result[0])
-result_unstruc_i = get_unstructured_op(computed)
-result_unstruc.show('computed')
-original_unstructured.show('ground_truth')
-diff_calib = result_unstruc_i - original_unstructured
-diff_calib.show('difference after calib')
-result_unstruc_i.show('computed calibrated')
-
 #%% Compare result with all data
 result_unstruc = get_unstructured_op(result[0])
+result_unstruc.show('computed {}'.format(i), clim = [-0.1, 0.1])
 
 for i in range(size):
     velo = calibration_equation(result[0], data_list[i])
     computed = action(g.exponential(velo), result[0])
     result_unstruc_i = get_unstructured_op(computed)
-    (result_unstruc_i ).show('computed {}'.format(i), clim = [-0.1, 0.1])
     (data_list[i]).show('data {}'.format(i), clim = [-0.1, 0.1])
+    result_unstruc_i.show('computed calibrated {}'.format(i), clim = [-0.1, 0.1])
     ((result_unstruc_i - data_list[i])).show('difference {}'.format(i), clim = [-0.1, 0.1])
     print('iteration ' + str(i))
     print('norm difference ' + str((result_unstruc_i - data_list[i]).norm()))
