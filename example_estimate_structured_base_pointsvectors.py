@@ -53,10 +53,26 @@ width = 1
 vector_fields_list = []
 vector_fields_list_proj=[]
 image_list = []
-a_list = [[0,0], [0,0], [0,0]]
-b_list = [[0, 2], [0, 2], [-2, 0]]
-c_list = [[0, 5], [-5, 2], [-5, 0]]
-nbdata = 3
+#a_list = [[0,0], [0,0], [0,0], [0, 0]]
+#b_list = [[0, 2], [0, 2], [-2, 0], [2*np.cos(np.pi*0.25), 2*np.sin(np.pi*0.25)]]
+#c_list = [[0, 5], [-5, 2], [-5, 0], []]
+
+r_b = 2
+theta_list_b = [np.pi*0.5 , np.pi*0.5 , np.pi*0.75, np.pi*0.75, np.pi*0.75, np.pi ]
+
+r_c = 5
+theta_list_c = [0 , np.pi*0.25, 0 , np.pi*0.25, np.pi*0.5, 0 ]
+
+nbdata = 6
+a_list=[]
+b_list=[]
+c_list=[]
+
+for i in range(nbdata):
+    a_list.append([0., 0.])
+    b_list.append([a_list[i][0] + r_b*np.cos(theta_list_b[i]), a_list[i][1] + r_b*np.sin(theta_list_b[i])])
+    c_list.append([b_list[i][0] + r_c*np.cos(theta_list_c[i] +theta_list_b[i]), b_list[i][1] + r_c*np.sin(theta_list_c[i] +theta_list_b[i])])
+
 points_list = []
 vectors_list = []
 vector_ab_unit, vector_ab_norm_orth, ab_norm = gen.compute_vect_unit(a, b)
@@ -79,7 +95,10 @@ for i in range(nbdata):
 
 #
 
-
+if False:
+    for i in range(nbdata):
+        image_list[i].show()
+#
 #%% Compute coeff
 
 def kernel(x, y):
@@ -109,10 +128,17 @@ for i in range(nbdata):
 
 #%% test compute new field
 
+#
+#a_test = [0, 0]
+#b_test = [-2, 0]
+#c_test = [-2, -5]
 
-a_test = [0, 0]
-b_test = [-2, 0]
-c_test = [-2, -5]
+theta_b_test = 1.3*np.pi
+theta_c_test = 0.6*np.pi
+
+a_test =[0., 0.]
+b_test = [a_test[0] + r_b*np.cos(theta_b_test), a_test[1] + r_b*np.sin(theta_b_test)]
+c_test = [b_test[0] + r_c*np.cos(theta_c_test + theta_b_test), b_test[1] + r_c*np.sin(theta_c_test + theta_b_test)]
 points, vectors = cmp.compute_pointsvectors_2articulations_nb(a_test, b_test, c_test, width, sigma, nb_ab, nb_ab_orth, nb_bc, nb_bc_orth)
 vector_translations = np.array([sum([alpha[u::nb_vectors]*vectors[v, u] for u in range(nb_vectors)]) for v in range(dim)])
 structured_test = struct.create_structured(points, vector_translations)
