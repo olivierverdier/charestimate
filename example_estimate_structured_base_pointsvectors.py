@@ -7,7 +7,7 @@ Created on Fri Dec  8 12:21:25 2017
 """
 import sys
 sys.path.insert(0, '/home/barbara')
-
+deform/FromPointsVectorsCoeff.py
 
 import structured_vector_fields
 import group
@@ -158,8 +158,9 @@ if False:
 #b_test = [-2, 0]
 #c_test = [-2, -5]
 
-theta_b_test = 0.50*np.pi
-theta_c_test = 0.0*np.pi
+
+theta_b_test = 1.3*np.pi
+theta_c_test = 0.6*np.pi
 
 a_test =[0., 0.]
 b_test = [a_test[0] + r_b*np.cos(theta_b_test), a_test[1] + r_b*np.sin(theta_b_test)]
