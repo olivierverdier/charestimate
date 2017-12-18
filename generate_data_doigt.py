@@ -61,6 +61,7 @@ def generate_image_2articulations(space, a, b, c, width):
 
     dim=2
     points=space.points().T
+    limit = 0.0*width
 
     vector_ab_unit, vector_ab_norm_orth, vector_ab_norm = compute_vect_unit(a, b)
     vector_bc_unit, vector_bc_norm_orth, vector_bc_norm = compute_vect_unit(b, c)
@@ -71,11 +72,42 @@ def generate_image_2articulations(space, a, b, c, width):
     points_prod_ab_orth = sum([(points[u] - a[u])*vector_ab_norm_orth[u] for u in range(dim)])
     points_prod_bc_orth = sum([(points[u] - b[u])*vector_bc_norm_orth[u]  for u in range(dim)])
 
-    I_arti0 = (0 <= points_prod_ab )*(points_prod_ab <= vector_ab_norm)
-    I_arti0 *= (points_prod_ab_orth >= 0)* (points_prod_ab_orth <= width)
+    I_arti0 = (0-limit <= points_prod_ab )*(points_prod_ab <= vector_ab_norm + limit)
+    I_arti0 *= (points_prod_ab_orth >= 0 - limit)* (points_prod_ab_orth <= width + limit)
 
-    I_arti1 = (0 <= points_prod_bc )*(points_prod_bc <= vector_bc_norm)
-    I_arti1 *= (points_prod_bc_orth >= 0)* (points_prod_bc_orth <= width)
+    I_arti1 = (0 - limit<= points_prod_bc )*(points_prod_bc <= vector_bc_norm + limit)
+    I_arti1 *= (points_prod_bc_orth >= 0-limit)* (points_prod_bc_orth <= width + limit)
+
+    return space.element((I_arti0 == 1) + (I_arti1 == 1))
+#
+
+def generate_image_2articulations_vectfield(space, a, b, c, width):
+
+    """
+    ONLY DIMENSION 2
+
+    generates a black and white image of a 'finger' with 2 articulations
+    at a and b, with ending point at c and constant width width
+    """
+
+    dim=2
+    points=space.points().T
+    limit = 0.3*width
+
+    vector_ab_unit, vector_ab_norm_orth, vector_ab_norm = compute_vect_unit(a, b)
+    vector_bc_unit, vector_bc_norm_orth, vector_bc_norm = compute_vect_unit(b, c)
+
+    points_prod_ab = sum([(points[u] - a[u])*vector_ab_unit[u] for u in range(dim)])
+    points_prod_bc = sum([(points[u] - b[u])*vector_bc_unit[u]  for u in range(dim)])
+
+    points_prod_ab_orth = sum([(points[u] - a[u])*vector_ab_norm_orth[u] for u in range(dim)])
+    points_prod_bc_orth = sum([(points[u] - b[u])*vector_bc_norm_orth[u]  for u in range(dim)])
+
+    I_arti0 = (0-limit <= points_prod_ab )*(points_prod_ab <= vector_ab_norm + limit)
+    I_arti0 *= (points_prod_ab_orth >= 0 - limit)* (points_prod_ab_orth <= width + limit)
+
+    I_arti1 = (0 - limit<= points_prod_bc )*(points_prod_bc <= vector_bc_norm + limit)
+    I_arti1 *= (points_prod_bc_orth >= 0-limit)* (points_prod_bc_orth <= width + limit)
 
     return space.element((I_arti0 == 1) + (I_arti1 == 1))
 #
@@ -92,7 +124,7 @@ def generate_vectorfield_2articulations_0(space, a, b, c, width):
 
     dim = 2
     points=space.points().T
-    I = generate_image_2articulations(space, a, b, c, width)
+    I = generate_image_2articulations_vectfield(space, a, b, c, width)
     points_a = np.array([points[u] - a[u] for u in range(dim)])
     vect = space.tangent_bundle.element(Rot_inf(points_a.T).T)
 
