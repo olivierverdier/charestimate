@@ -6,8 +6,8 @@ Created on Fri Dec  8 12:21:25 2017
 @author: bgris
 """
 import sys
-sys.path.insert(0, '/home/barbara')
-deform/FromPointsVectorsCoeff.py
+sys.path.insert(0, '/home/bgris')
+#deform/FromPointsVectorsCoeff.py
 
 import structured_vector_fields
 import group
@@ -173,7 +173,7 @@ unstructured_test.show(clim=[-2, 2])
 
 
 
-#%% 
+#%%
 
 def generate_points_vectors(o):
     a = o[0].copy()
@@ -189,9 +189,9 @@ def compute_vectorfield_pointsvectorcoeff(points, vectors, alpha):
     vector_translations = np.array([sum([alpha[u::nb_vectors]*vectors[v, u] for u in range(nb_vectors)]) for v in range(dim)])
     structured = struct.create_structured(points, vector_translations)
     unstructured = gen_unstructured(structured)
-    
+
     return unstructured.copy()
-#  
+#
 #%%
 
 from DeformationModulesODL.deform import Kernel
@@ -214,7 +214,7 @@ import generate_data_doigt as gen
 import structured_vector_fields as struct
 
 nb_basepoints = 3
-Articul2 = FromPointsVectorsCoeff.FromPointsVectorsCoeff(space, nb_basepoints, generate_points_vectors, 
+Articul2 = FromPointsVectorsCoeff.FromPointsVectorsCoeff(space, nb_basepoints, generate_points_vectors,
                                                           compute_vectorfield_pointsvectorcoeff, alpha)
 
 #%%
@@ -339,26 +339,26 @@ for t in range(nb_time_point_int):
     #plt.axis([mini, maxi, mini, maxi]), plt.grid(True, linestyle='--')
     vect_field_temp = gen.generate_vectorfield_2articulations_0(space, a, b, c, width).copy()
     #vect_field_temp[0].show()
-    
+
     vect_field_integration.append(vect_field_temp.copy())
     a = a + delta_t*np.array([v.interpolation(a) for v in vect_field_temp])
     b = b + delta_t*np.array([v.interpolation(b) for v in vect_field_temp])
     c = c + delta_t*np.array([v.interpolation(c) for v in vect_field_temp])
-    
+
 #
 plt.axis('equal')
 
 #%%
- 
+
 for t in range(nb_time_point_int):
     plt.figure(str(t))
-    
+
     plt.plot(a[0], a[1], 'or')
     plt.plot(b[0], b[1], 'or')
     plt.plot(c[0], c[1], 'or')
     #plt.plot(points_list[0][0], points_list[0][1], 'xb')
     plt.axis([mini, maxi, mini, maxi]), plt.grid(True, linestyle='--')
-    
+
 
 
 
