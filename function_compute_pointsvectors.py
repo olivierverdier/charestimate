@@ -13,12 +13,20 @@ estimate_linear_coeff from points a, b, c and from width
 
 import numpy as np
 import structured_vector_fields as struct
-import generate_data_doigt as gen
+
+def compute_vect_unit(a, b):
+    """
+    computes unit vectors colin to ab and its orthogonal """
+    vector_ab = np.array([bu - au for au, bu in zip(a, b)])
+    vector_ab_norm = np.sqrt(sum( [u**2 for u in vector_ab]))
+    vector_ab_unit = vector_ab / vector_ab_norm
+    vector_ab_norm_orth = np.array([-vector_ab[1], vector_ab[0]])/vector_ab_norm
+    return [vector_ab_unit, vector_ab_norm_orth, vector_ab_norm]
 
 def compute_pointsvectors_2articulations(a, b, c, width, sigma):
     dim = 2
-    vector_ab_unit, vector_ab_norm_orth, ab_norm = gen.compute_vect_unit(a, b)
-    vector_bc_unit, vector_bc_norm_orth, bc_norm = gen.compute_vect_unit(b, c)
+    vector_ab_unit, vector_ab_norm_orth, ab_norm = compute_vect_unit(a, b)
+    vector_bc_unit, vector_bc_norm_orth, bc_norm = compute_vect_unit(b, c)
 
     nb_ab = int((ab_norm + 0.2*width) / sigma) +1
     nb_ab_orth = int(2 * width / sigma) +1
@@ -48,8 +56,8 @@ def compute_pointsvectors_2articulations(a, b, c, width, sigma):
 
 def compute_pointsvectors_2articulations_nb(a, b, c, width, sigma, nb_ab, nb_ab_orth, nb_bc, nb_bc_orth):
     dim = 2
-    vector_ab_unit, vector_ab_norm_orth, ab_norm = gen.compute_vect_unit(a, b)
-    vector_bc_unit, vector_bc_norm_orth, bc_norm = gen.compute_vect_unit(b, c)
+    vector_ab_unit, vector_ab_norm_orth, ab_norm = compute_vect_unit(a, b)
+    vector_bc_unit, vector_bc_norm_orth, bc_norm = compute_vect_unit(b, c)
 
 
     points = []

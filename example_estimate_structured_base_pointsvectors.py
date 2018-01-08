@@ -22,6 +22,7 @@ import structured_vector_fields as struct
 
 import scipy
 
+import matplotlib.pyplot as plt
 from DeformationModulesODL.deform import Kernel
 from DeformationModulesODL.deform import DeformationModuleAbstract
 from DeformationModulesODL.deform import SumTranslations
@@ -175,25 +176,9 @@ unstructured_test.show(clim=[-2, 2])
 
 #%%
 
-def generate_points_vectors(o):
-    a = o[0].copy()
-    b = o[1].copy()
-    c = o[2].copy()
-    return cmp.compute_pointsvectors_2articulations_nb(a, b, c, width, sigma, nb_ab, nb_ab_orth, nb_bc, nb_bc_orth)
 
-
-gen_unstructured = struct.get_from_structured_to_unstructured(space, kernel)
-
-def compute_vectorfield_pointsvectorcoeff(points, vectors, alpha):
-    nb_vectors = vectors.shape[1]
-    vector_translations = np.array([sum([alpha[u::nb_vectors]*vectors[v, u] for u in range(nb_vectors)]) for v in range(dim)])
-    structured = struct.create_structured(points, vector_translations)
-    unstructured = gen_unstructured(structured)
-
-    return unstructured.copy()
-#
-#%%
-
+import sys
+sys.path.insert(0, '/home/barbara')
 from DeformationModulesODL.deform import Kernel
 from DeformationModulesODL.deform import DeformationModuleAbstract
 from DeformationModulesODL.deform import SumTranslations
@@ -204,14 +189,89 @@ from DeformationModulesODL.deform import EllipseMvt
 from DeformationModulesODL.deform import FromFile
 from DeformationModulesODL.deform import FromFileV5
 from DeformationModulesODL.deform import TemporalAttachmentModulesGeom
+import odl
 
+import matplotlib.pyplot as plt
+import numpy as np
 from DeformationModulesODL.deform import FromPointsVectorsCoeff
 
 import charestimate as char
 import estimate_structured_base_pointsvectors as est_coeff
 import function_compute_pointsvectors as cmp
-import generate_data_doigt as gen
+#import generate_data_doigt as gen
 import structured_vector_fields as struct
+
+space = odl.uniform_discr(
+        min_pt =[-10, -10], max_pt=[10, 10], shape=[128, 128],
+        dtype='float32', interp='linear')
+
+
+width = 1
+
+#a = [0, 0]
+#theta_b = 0.5*np.pi
+#theta_c = 0.5*np.pi
+#r_b = 2
+#r_c = 5
+#a, b, c = generate_GD_from_athetas(a, theta_b, theta_c, r_b, r_c)
+#gen.generate_vectorfield_2articulations_0(space, a, b, c, width).show()
+
+
+r_b = 4
+r_c = 4
+sigma = 0.5
+
+nbdata = 10
+
+pathresult = '/home/barbara/Results/DeformationModules/Doigt/'
+pathdata = '/home/barbara/data/Doigt/'
+name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata)
+namedata = pathdata + name_exp
+nameresult = pathresult + name_exp
+
+nb_ab = int(np.loadtxt(namedata + '/nameab'))
+nb_ab_orth = int(np.loadtxt(namedata + '/nameaborth'))
+nb_bc = int(np.loadtxt(namedata + '/namebc'))
+nb_bc_orth = int(np.loadtxt(namedata + '/namebc_orth'))
+
+alpha = np.loadtxt(nameresult + 'alpha')
+
+def kernel(x, y):
+    #si = tf.shape(x)[0]
+    return np.exp(- sum([ (x[i] - y[i]) ** 2 for i in range(dim)]) / (sigma ** 2))
+
+
+
+
+def generate_points_vectors(o):
+    a = o[0].copy()
+    b = o[1].copy()
+    c = o[2].copy()
+    return cmp.compute_pointsvectors_2articulations_nb(a, b, c, width, sigma, nb_ab, nb_ab_orth, nb_bc, nb_bc_orth)
+
+
+gen_unstructured = struct.get_from_structured_to_unstructured(space, kernel)
+
+# if alpha is a vector
+#def compute_vectorfield_pointsvectorcoeff(points, vectors, alpha):
+#    nb_vectors = vectors.shape[1]
+#    vector_translations = np.array([sum([alpha[u::nb_vectors]*vectors[v, u] for u in range(nb_vectors)]) for v in range(dim)])
+#    structured = struct.create_structured(points, vector_translations)
+#    unstructured = gen_unstructured(structured)
+#
+#    return unstructured.copy()
+
+# if alpha is a matrix
+def compute_vectorfield_pointsvectorcoeff(points, vectors, alpha):
+    #nb_vectors = vectors.shape[1]
+    vector_translations = np.dot(np.array(vectors), np.array(alpha))
+    structured = struct.create_structured(points, vector_translations)
+    unstructured = gen_unstructured(structured)
+
+    return unstructured.copy()
+#
+#%%
+
 
 nb_basepoints = 3
 Articul2 = FromPointsVectorsCoeff.FromPointsVectorsCoeff(space, nb_basepoints, generate_points_vectors,
@@ -219,10 +279,10 @@ Articul2 = FromPointsVectorsCoeff.FromPointsVectorsCoeff(space, nb_basepoints, g
 
 #%%
 
-Articul2.ComputeField([a_test, b_test, c_test], [1]).show('artil')
+#Articul2.ComputeField([a_test, b_test, c_test], [1]).show('artil')
 #%%
 
-gen.generate_vectorfield_2articulations_0(space, a_test, b_test, c_test, width).show('gen')
+#gen.generate_vectorfield_2articulations_0(space, a_test, b_test, c_test, width).show('gen')
 
 
 
@@ -236,9 +296,29 @@ lamb1=1e-5
 Module = Articul2
 forward_op=odl.IdentityOperator(space)
 
+import scipy
+i=0
+#a = param_list.T[i][0:2]
+#b = param_list.T[i][2:4]
+#c = param_list.T[i][4:6]
 
-template = space.element(scipy.ndimage.filters.gaussian_filter(image_list[0].asarray(),1))
 
+theta_b_init = 0.5*np.pi
+theta_c_init = 0.25*np.pi
+
+a_init =[0., 0.]
+b_init = [a_init[0] + r_b*np.cos(theta_b_init), a_init[1] + r_b*np.sin(theta_b_init)]
+c_init = [b_init[0] + r_c*np.cos(theta_c_init + theta_b_init), b_init[1] + r_c*np.sin(theta_c_init + theta_b_init)]
+
+a = [0., 0.]
+b = [a_init[0] + r_b*np.cos(theta_b_init), a_init[1] + r_b*np.sin(theta_b_init)]
+c = [b_init[0] + r_c*np.cos(theta_c_init + theta_b_init), b_init[1] + r_c*np.sin(theta_c_init + theta_b_init)]
+
+
+
+template_init = generate_image_2articulations(space, a, b, c, width)
+template = space.element(scipy.ndimage.filters.gaussian_filter(template_init.asarray(),1))
+template.show()
 proj_data = forward_op(template)
 
 # Add white Gaussion noise onto the noiseless data
@@ -257,7 +337,7 @@ Norm=odl.solvers.L2NormSquared(forward_op.range)
 
 functional_mod_temp = TemporalAttachmentModulesGeom.FunctionalModulesGeom(lamb0, nb_time_point_int, template, data, data_time_points, forward_operators,Norm, Module)
 
-
+#nb_ab
 
 
 def vect_field_list(GD_init,Cont):
@@ -277,24 +357,26 @@ def vect_field_list(GD_init,Cont):
 #
 
 #%%
-theta_b_init = 0.5*np.pi
-theta_c_init = 0.3*np.pi
-
-a_init =[0., 0.]
-b_init = [a_init[0] + r_b*np.cos(theta_b_init), a_init[1] + r_b*np.sin(theta_b_init)]
-c_init = [b_init[0] + r_c*np.cos(theta_c_init + theta_b_init), b_init[1] + r_c*np.sin(theta_c_init + theta_b_init)]
-
 GD_init=np.array([a_init, b_init, c_init])
 Cont = 1*odl.ProductSpace(Module.Contspace, nb_time_point_int+1).one()
 
 GD, vect_field=vect_field_list(GD_init, Cont)
+
+I=TemporalAttachmentModulesGeom.ShootTemplateFromVectorFields(vect_field, template)
+
+for t in range(nb_time_point_int+1):
+    I[t].show(str(t))
+    plt.plot(GD[t].T[0], GD[t].T[1],'xr')
+#
+plt.axis('equal')
+
 #%%
 r_cbis = 0.8 * r_c
 a_initbis =[-0.5, 0.]
 b_initbis = [a_initbis[0] + r_b*np.cos(theta_b_init), a_initbis[1] + r_b*np.sin(theta_b_init)]
 c_initbis = [b_initbis[0] + r_cbis*np.cos(theta_c_init + theta_b_init), b_initbis[1] + r_cbis*np.sin(theta_c_init + theta_b_init)]
 
-templatebis = gen.generate_image_2articulations(space, a_initbis, b_initbis, c_initbis, 0.5*width)
+templatebis = generate_image_2articulations(space, a_initbis, b_initbis, c_initbis, 0.5*width)
 I=TemporalAttachmentModulesGeom.ShootTemplateFromVectorFields(vect_field, templatebis)
 
 for t in range(nb_time_point_int+1):
@@ -306,6 +388,65 @@ plt.axis('equal')
 
 for i in range(nb_time_point_int):
     vect_field[i].show(str(i))
+#%% Faire figures vector fields data
+points = space.points()
+path = '/home/barbara/data/Doigt/'
+name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata) + '/'
+name = path + name_exp
+name_exp_save = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_nbdata_' + str(nbdata)
+
+get_unstructured_op = struct.get_from_structured_to_unstructured(space, kernel)
+nbdatamax = 5
+step = 10
+for idata in range(nbdatamax):
+    namefig = pathresult + name_exp_save + 'data' + str(idata) + '.png'
+    v = 0.5*get_unstructured_op(np.loadtxt(name + 'structured' + str(idata)))
+    param = np.loadtxt(name + 'param' + str(idata))
+    image = generate_image_2articulations(space, param[0:2], param[2:4], param[4:6], width)
+    fig = image.show(clim=[0, 2])
+    #    fig = plt.figure()
+    plt.axis('off')
+    fig.delaxes(fig.axes[1])
+    plt.quiver(points.T[0][::step],points.T[1][::step],v[0][::step],v[1][::step], color='r', scale = 10)
+    plt.plot(param[::2], param[1::2], 'xb')
+    plt.savefig(namefig)
+    
+    
+    namefig =  pathresult + name_exp_save + 'data' + str(idata) + 'estimated' + '.png'
+
+    v =  0.25*Articul2.ComputeField([param[0:2], param[2:4], param[4:6]], [1])
+    fig = image.show(clim=[0, 2])
+    plt.axis('off')
+    fig.delaxes(fig.axes[1])
+    plt.quiver(points.T[0][::step],points.T[1][::step],v[0][::step],v[1][::step], color='r', scale = 10)
+    plt.plot(param[::2], param[1::2], 'xb')
+    
+    plt.savefig(namefig)
+#
+
+#%% faire figure  nouveaux parametres
+namefig = pathresult + name_exp_save +  'estimatedtest1' + '.png'
+
+theta_b_init = 0.2*np.pi
+theta_c_init = 0.3*np.pi
+
+a_init =[-5., 0.0]
+b_init = [a_init[0] + r_b*np.cos(theta_b_init), a_init[1] + r_b*np.sin(theta_b_init)]
+c_init = [b_init[0] + r_c*np.cos(theta_c_init + theta_b_init), b_init[1] + r_c*np.sin(theta_c_init + theta_b_init)]
+
+
+v = 0.25*Articul2.ComputeField([a_init, b_init, c_init], [1])
+image = generate_image_2articulations(space, a_init, b_init, c_init, width)
+fig = image.show(clim=[0, 2])
+#fig = plt.figure()
+plt.axis('off')
+fig.delaxes(fig.axes[1])
+plt.quiver(points.T[0][::step],points.T[1][::step],v[0][::step],v[1][::step], color='r', scale = 10)
+plt.plot(a_init[0], a_init[1], 'xb')
+plt.plot(b_init[0], b_init[1], 'xb')
+plt.plot(c_init[0], c_init[1], 'xb')
+
+plt.savefig(namefig)
 
 #%%
 t=5
