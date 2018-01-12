@@ -82,8 +82,14 @@ def scalar_product_unstructured(structured_field0, field1):
 
     return scalar_product
 
+
 def get_from_structured_to_unstructured(space, kernel):
     mg = space.meshgrid
+    nb_pts_mg0 = mg[0].shape[0]
+    nb_pts_mg1 = mg[1].shape[1]
+    mg_reshaped = []
+    mg_reshaped.append(mg[0].reshape([nb_pts_mg0,1,1]))
+    mg_reshaped.append(mg[1].reshape([1,nb_pts_mg1,1]))
 
     def from_structured_to_unstructured(structured_field):
         dim_double, nb_points = structured_field.shape
@@ -91,18 +97,40 @@ def get_from_structured_to_unstructured(space, kernel):
         points = get_points(structured_field)
         vectors = get_vectors(structured_field)
         unstructured = space.tangent_bundle.zero()
-
-        for k in range(nb_points):
-            def kern_app_point(x):
-                return kernel(x, points[:, k])
-
-            kern_discr = kern_app_point(mg)
-
-            unstructured += space.tangent_bundle.element([kern_discr * vect for vect in vectors[:, k]]).copy()
+        pt0 = points[0].reshape(1,1,nb_points)
+        pt1 = points[1].reshape(1,1,nb_points)
+        points_reshaped = [pt0, pt1]
+        vectors_reshaped = np.transpose(vectors.reshape(dim,nb_points,1), (0,2,1))
+        kern_discr = kernel(mg_reshaped, points_reshaped)
+        unstructured = space.tangent_bundle.element([(vectors_reshaped[u] * kern_discr).sum(2) for u in range(dim)])
 
         return unstructured
 
     return from_structured_to_unstructured
+
+
+#
+#def get_from_structured_to_unstructured(space, kernel):
+#    mg = space.meshgrid
+#
+#    def from_structured_to_unstructured(structured_field):
+#        dim_double, nb_points = structured_field.shape
+#        dim = int(dim_double/2)
+#        points = get_points(structured_field)
+#        vectors = get_vectors(structured_field)
+#        unstructured = space.tangent_bundle.zero()
+#
+#        for k in range(nb_points):
+#            def kern_app_point(x):
+#                return kernel(x, points[:, k])
+#
+#            kern_discr = kern_app_point(mg)
+#
+#            unstructured += space.tangent_bundle.element([kern_discr * vect for vect in vectors[:, k]]).copy()
+#
+#        return unstructured
+#
+#    return from_structured_to_unstructured
 
 
 def make_covariance_matrix(points, kernel):
