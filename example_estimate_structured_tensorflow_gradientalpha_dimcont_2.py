@@ -1,9 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Created on Thu Jan 11 12:49:34 2018
+
+@author: bgris
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
 Created on Fri Dec 22 11:56:16 2017
 
 @author: bgris
+
+We suppose here that the dimension of the control to estimate is 2
+
 """
 
 
@@ -37,7 +48,7 @@ space = odl.uniform_discr(
         dtype='float32', interp='linear')
 
 
-width = 1
+width = 2
 
 #a = [0, 0]
 #theta_b = 0.5*np.pi
@@ -50,7 +61,7 @@ width = 1
 
 r_b = 4
 r_c = 4
-sigma = 0.2
+sigma = 0.3
 
 nbdata = 10
 #param =  gen.generate_random_param(nbdata, r_b, r_c)
@@ -171,6 +182,14 @@ def mult_scalar_structured(scal, structured):
     return create_structured(points, vectors_mult)
 
 
+
+def add_structured_samepoints(structured0, structured1):
+    points = structured0[0:dim]
+    vectors0 = structured0[dim:2*dim]
+    vectors1 = structured1[dim:2*dim]
+    return create_structured(points, vectors0 + vectors1)
+
+
 def mult_scalar_structured_np(scal, structured):
     points = structured[0:dim]
     vectors = structured[dim:2*dim]
@@ -195,13 +214,18 @@ def kernel_np(x, y):
     #si = tf.shape(x)[0]
     return np.exp(- sum([ (x[i] - y[i]) ** 2 for i in range(dim)]) / (sigma ** 2))
 
+sblur = 5
+path = '/home/bgris/data/'
 
+pathexp = 'Doigtbis_dimcont2/'
+#pathexp = 'RotationTranslationRectangle_dimcont2/'
 
-#path = '/home/bgris/data/RotationRectangle/'
-path = '/home/bgris/data/Doigtbis/'
+path += pathexp
+#path = '/home/bgris/data/Doigtbis/'
 #name_exp = 'rb_' + str(r_b) +  '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata)
+name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata) + '_sblur_' + str(sblur)
 #name_exp = 'rb_' + str(r_b) + '_width_' + str(width) + '_sigma_' + str(sigma) + 'nb_fixed' + '_nbdata_' + str(nbdata)
-name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata)
+#name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata)
 
 name = path + name_exp + '/'
 
@@ -213,7 +237,7 @@ cov_mat_list = []
 param_list = []
 A_inner_prod_list = []
 
-nbdatamax = 10
+nbdatamax = 5
 for i in range(nbdatamax):
     structured_list.append(np.loadtxt(name + 'structured' + str(i)))
     unstructured_list.append(np.loadtxt(name + 'unstructured' + str(i)))
@@ -285,18 +309,34 @@ nb_vectors = len(vectors_list[0][0])
 vectors_product_spaces = [np.array([[np.dot(vectors_list[i].T[j], vectors_list[i].T[k]) for j in range(nb_vectors)] for k in range(nb_vectors)]) for i in range(nbdatamax)]
 
 #inp = tf.placeholder(shape=(nb_vectors, nb_points), dtype=tf.float64)
-inp = tf.Variable(np.ones([nb_vectors, nb_points]), name="alpha")
+inp = tf.Variable(np.ones([2, nb_vectors, nb_points]), name="alpha")
 
 # List of zeta_(o_i) (1)
-structured_list_computed = [create_structured(points_list[i], tf.matmul(vectors_list[i], inp)) for i in range(nbdatamax)]
+structured_list_computed_0 = [create_structured(points_list[i], tf.matmul(vectors_list[i], inp[0])) for i in range(nbdatamax)]
+structured_list_computed_1 = [create_structured(points_list[i], tf.matmul(vectors_list[i], inp[1])) for i in range(nbdatamax)]
 
 #squared_norm_list_computed = [scalar_product_structured(structured_list_computed[i], structured_list_computed[i]) for i in range(nbdatamax)]
 
-# scalar products between data and generated : needs to
-scalar_product_list = [tf.reduce_sum(tf.multiply(A_inner_prod_list[i], inp ))  for i in range(nbdatamax)]
-squared_norm_list = [sum([vectors_product_spaces[i][j][k] * tf.matmul(tf.reshape(inp[k], [1, nb_points]), tf.matmul(cov_mat_list[i], tf.transpose([inp[j]]))) for k in range(nb_vectors) for j in range(nb_vectors)]) for i in range(nbdatamax)]
+# scalar products between data and generated
+scalar_product_list_data0 = [tf.reduce_sum(tf.multiply(A_inner_prod_list[i], inp[0] ))  for i in range(nbdatamax)]
 
-output = sum([squared_norm_diff(tf.constant(structured_list[i]), mult_scalar_structured(scalar_product_list[i] / squared_norm_list[i], structured_list_computed[i])) for i in range(nbdatamax)])
+# squared norm of \zeta^0_o (1) for each data
+squared_norm_list_0 = [sum([vectors_product_spaces[i][j][k] * tf.matmul(tf.reshape(inp[0][k], [1, nb_points]), tf.matmul(cov_mat_list[i], tf.transpose([inp[0][j]]))) for k in range(nb_vectors) for j in range(nb_vectors)]) for i in range(nbdatamax)]
+
+# inner products between \zeta^0_o (1) and \zeta^1_o (1) for each data
+scalar_product_list_01 =  [sum([vectors_product_spaces[i][j][k] * tf.matmul(tf.reshape(inp[0][k], [1, nb_points]), tf.matmul(cov_mat_list[i], tf.transpose([inp[1][j]]))) for k in range(nb_vectors) for j in range(nb_vectors)]) for i in range(nbdatamax)]
+
+# orth1 =\zeta^1_o (1) - proj_{\zeta^0_o (1)}  ( \zeta^1_o (1)) : it is a structured field
+orth1 = [create_structured(points_list[i], tf.matmul(vectors_list[i], inp[1] - (scalar_product_list_01[i]/squared_norm_list_0[i]) * inp[0])) for i in range(nbdatamax)]
+
+# squared norm of  orth1 = \zeta^1_o (1) - proj_{\zeta^0_o (1)}  ( \zeta^1_o (1))
+squared_norm_diff_proj01 = [sum([vectors_product_spaces[i][j][k] * tf.matmul(tf.reshape((inp[1][k] - (scalar_product_list_01[i]/squared_norm_list_0[i]) * inp[0][k] ), [1, nb_points]), tf.matmul(cov_mat_list[i], tf.reshape([(inp[1][j] - (scalar_product_list_01[i]/squared_norm_list_0[i]) * inp[0][j] )], [nb_points, 1]))) for k in range(nb_vectors) for j in range(nb_vectors)]) for i in range(nbdatamax)]
+
+# inner product between data and  orth1 = \zeta^1_o (1) - proj_{\zeta^0_o (1)}  ( \zeta^1_o (1))
+scalar_product_list_data_orth1 =  [tf.reduce_sum(tf.multiply(A_inner_prod_list[i], inp[1] - (scalar_product_list_01[i]/squared_norm_list_0[i]) * inp[0]))  for i in range(nbdatamax)]
+
+#output
+output = sum([squared_norm_diff(tf.constant(structured_list[i]), add_structured_samepoints( mult_scalar_structured(scalar_product_list_data0[i] / squared_norm_list_0[i], structured_list_computed_0[i]) , mult_scalar_structured(scalar_product_list_data_orth1[i] / squared_norm_diff_proj01[i], orth1[i]))) for i in range(nbdatamax)])
 
 
 ##%%
@@ -320,8 +360,8 @@ grad = grads[0]
 #%% Gradient descent initialisation
 nb_it = 1000
 
-alpha_init = np.ones([nb_vectors, nb_points])
-alpha_init[0][0] = 1.0
+alpha_init = np.ones([2, nb_vectors, nb_points])
+alpha_init[0][:][::2] = -1.0
 alpha = alpha_init.copy()
 
 ##%% Gradient descent run
@@ -329,7 +369,7 @@ energy = output.eval(feed_dict={inp: alpha_init})
 
 print('init  energy = {}'.format( energy))
 step = 0.02
-#%%
+##%%
 for i in range(nb_it):
     energy_grad = grad.eval(feed_dict={inp: alpha})
     alpha_temp = alpha - step * energy_grad
@@ -345,16 +385,23 @@ for i in range(nb_it):
 #
 
 
-##%%
+#%%
 
 #path = '/home/bgris/Results/DeformationModules/RotationRectangle/'
-path = '/home/bgris/Results/DeformationModules/Doigtbis/'
+path = '/home/bgris/Results/' + 'DeformationModules/'
+path += pathexp
 ##name_exp = 'rb_' + str(r_b) + '_rc_' +  '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata)
 #name_exp = 'rb_' + str(r_b) + '_width_' + str(width) + '_sigma_' + str(sigma) + 'nb_fixed' + '_nbdata_' + str(nbdata)
 
 name = path + name_exp
 
-np.savetxt(name + 'alpha', alpha)
+np.savetxt(name + 'alpha0', alpha[0])
+np.savetxt(name + 'alpha1', alpha[1])
+
+if False:
+    alpha = []
+    alpha.append(np.loadtxt(name + 'alpha0'))
+    alpha.append(np.loadtxt(name + 'alpha1'))
 
 ##%%
 #learning_rate = 0.1
@@ -378,41 +425,51 @@ def kernel_np(x, y):
     return np.exp(- sum([ (x[i] - y[i]) ** 2 for i in range(dim)]) / (sigma ** 2))
 
 get_unstructured_op = struct.get_from_structured_to_unstructured(space, kernel_np)
-structured_computed = []
+structured_computed0 = []
+structured_computed1 = []
+orth_computed = []
 unstructured_computed = []
-fac = []
+fac0 = []
+fac1 = []
 
 for i in range(nbdatamax):
-    structured_temp = struct.create_structured(points_list[i], np.dot(vectors_list[i], alpha))
-    prod = struct.scalar_product_structured(structured_temp, structured_list[i], kernel_np)
-    squared_norm = struct.scalar_product_structured(structured_temp, structured_temp, kernel_np)
-    fac.append(prod / squared_norm)
-    structured_computed.append(structured_temp.copy())
-    unstructured_computed.append(get_unstructured_op(structured_temp).copy())
+    structured_temp0 = struct.create_structured(points_list[i], np.dot(vectors_list[i], alpha[0]))
+    structured_temp1 = struct.create_structured(points_list[i], np.dot(vectors_list[i], alpha[1]))
+    prod_data0 = struct.scalar_product_structured(structured_temp0, structured_list[i], kernel_np)
+    squared_norm0 = struct.scalar_product_structured(structured_temp0, structured_temp0, kernel_np)
+    fac0.append(prod_data0 / squared_norm0)
+    prod_data01 = struct.scalar_product_structured(structured_temp0, structured_temp1, kernel_np)
+    orth  = struct.create_structured(points_list[i], np.dot(vectors_list[i], alpha[1] - (prod_data01 / squared_norm0)*alpha[0] ))
+    prod_dataorth = struct.scalar_product_structured(orth, structured_list[i], kernel_np)
+    squared_norm_orth = struct.scalar_product_structured(orth, orth, kernel_np)
+    fac1.append(prod_dataorth / squared_norm_orth)
+
+
+
+    structured_computed0.append(structured_temp0.copy())
+    structured_computed1.append(structured_temp1.copy())
+    orth_computed.append(orth.copy())
+    unstructured_computed.append(fac0[i] * get_unstructured_op(structured_temp0) + fac1[i] *  get_unstructured_op(orth) )
 #
 
+#%%
+#nbdatamax=8
+
+for i in range(nbdatamax):
+    get_unstructured_op(structured_list[i]).show('unstructured data {}'.format(i), clim=[-5, 5])
+    (unstructured_computed[i]).show('unstructured computed {}'.format(i), clim=[-5, 5])
+#
+
+for i in range(nbdatamax):
+    get_unstructured_op(structured_computed0[i]).show('structured_computed0  {}'.format(i), clim=[-5, 5])
+    get_unstructured_op(structured_computed1[i]).show('structured_computed1 {}'.format(i), clim=[-5, 5])
+    get_unstructured_op(orth_computed[i]).show('structured_computed orth  {}'.format(i), clim=[-5, 5])
 
 
 for i in range(nbdatamax):
-    get_unstructured_op(structured_list[i]).show('unstructured data {}'.format(i))
-    (fac[i] * unstructured_computed[i]).show('unstructured computed {}'.format(i))
-#
-
-
-
-for i in range(nbdatamax):
-    (fac[i] * unstructured_computed[i] -get_unstructured_op(structured_list[i])).show('Difference {}'.format(i))
+    ( unstructured_computed[i] -get_unstructured_op(structured_list[i])).show('Difference {}'.format(i), clim=[-5, 5])
 
 #
-#%% save result
-
-path = '/home/bgris/Results/DeformationModules/Doigtbis/'
-name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata)
-name = path + name_exp
-
-np.savetxt(name + 'alpha', alpha)
-
-alpha_load = np.loadtxt(name + 'alpha')
 
 
 #%%

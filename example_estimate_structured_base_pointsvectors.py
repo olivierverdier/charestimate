@@ -178,7 +178,7 @@ unstructured_test.show(clim=[-2, 2])
 
 
 import sys
-sys.path.insert(0, '/home/barbara')
+sys.path.insert(0, '/home/bgris')
 from DeformationModulesODL.deform import Kernel
 from DeformationModulesODL.deform import DeformationModuleAbstract
 from DeformationModulesODL.deform import SumTranslations
@@ -219,12 +219,12 @@ width = 1
 
 r_b = 4
 r_c = 4
-sigma = 0.5
+sigma = 0.2
 
 nbdata = 10
 
-pathresult = '/home/barbara/Results/DeformationModules/Doigt/'
-pathdata = '/home/barbara/data/Doigt/'
+pathresult = '/home/bgris/Results/DeformationModules/Doigt/'
+pathdata = '/home/bgris/data/Doigt/'
 name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata)
 namedata = pathdata + name_exp
 nameresult = pathresult + name_exp
@@ -270,6 +270,38 @@ def compute_vectorfield_pointsvectorcoeff(points, vectors, alpha):
 
     return unstructured.copy()
 #
+
+def generate_image_2articulations(space, a, b, c, width):
+
+    """
+    ONLY DIMENSION 2
+
+    generates a black and white image of a 'finger' with 2 articulations
+    at a and b, with ending point at c and constant width width
+    """
+
+    dim=2
+    points=space.points().T
+    limit = 0.0*width
+
+    vector_ab_unit, vector_ab_norm_orth, vector_ab_norm = cmp.compute_vect_unit(a, b)
+    vector_bc_unit, vector_bc_norm_orth, vector_bc_norm = cmp.compute_vect_unit(b, c)
+
+    points_prod_ab = sum([(points[u] - a[u])*vector_ab_unit[u] for u in range(dim)])
+    points_prod_bc = sum([(points[u] - b[u])*vector_bc_unit[u]  for u in range(dim)])
+
+    points_prod_ab_orth = sum([(points[u] - a[u])*vector_ab_norm_orth[u] for u in range(dim)])
+    points_prod_bc_orth = sum([(points[u] - b[u])*vector_bc_norm_orth[u]  for u in range(dim)])
+
+    I_arti0 = (0-limit <= points_prod_ab )*(points_prod_ab <= vector_ab_norm + limit)
+    I_arti0 *= (points_prod_ab_orth >= 0 - limit)* (points_prod_ab_orth <= width + limit)
+
+    I_arti1 = (0 - limit<= points_prod_bc )*(points_prod_bc <= vector_bc_norm + limit)
+    I_arti1 *= (points_prod_bc_orth >= 0-limit)* (points_prod_bc_orth <= width + limit)
+
+    return space.element((I_arti0 == 1) + (I_arti1 == 1))
+#
+
 #%%
 
 
@@ -304,7 +336,7 @@ i=0
 
 
 theta_b_init = 0.5*np.pi
-theta_c_init = 0.25*np.pi
+theta_c_init = 0.3*np.pi
 
 a_init =[0., 0.]
 b_init = [a_init[0] + r_b*np.cos(theta_b_init), a_init[1] + r_b*np.sin(theta_b_init)]
@@ -360,15 +392,41 @@ def vect_field_list(GD_init,Cont):
 GD_init=np.array([a_init, b_init, c_init])
 Cont = 1*odl.ProductSpace(Module.Contspace, nb_time_point_int+1).one()
 
-GD, vect_field=vect_field_list(GD_init, Cont)
+GD_mod, vect_field_mod=vect_field_list(GD_init, Cont)
 
-I=TemporalAttachmentModulesGeom.ShootTemplateFromVectorFields(vect_field, template)
+#GD_exp = []
+#GD_exp.append(GD_init)
+#vect_field_exp = []
+#
+#for i in range(nb_time_point_int+1):
+#    a = GD_exp[i][0]
+#    b = GD_exp[i][1]
+#    c = GD_exp[i][2]
+#    vect_field_temp =  generate_vectorfield_2articulations_0(space, a, b, c, width).copy()
+#    vect_field_exp.append(vect_field_temp.copy())
+#    GD_speed = np.array([vect_field_temp[u].interpolation(GD_exp[i].T) for u in range(2)]).T
+#    GD_exp.append(GD_exp[i] + (1/nb_time_point_int)*GD_speed)
+#
+#vect_field_exp = odl.ProductSpace(template.space.tangent_bundle,nb_time_point_int+1).element(vect_field_exp)
+##
+
+#%%
+I_mod=TemporalAttachmentModulesGeom.ShootTemplateFromVectorFields(vect_field_mod, template)
+#I_exp=TemporalAttachmentModulesGeom.ShootTemplateFromVectorFields(vect_field_exp, template)
 
 for t in range(nb_time_point_int+1):
-    I[t].show(str(t))
-    plt.plot(GD[t].T[0], GD[t].T[1],'xr')
+    I_mod[t].show('mod' + str(t))
+    plt.plot(GD_mod[t].T[0], GD_mod[t].T[1],'xr')
+#    I_exp[t].show('exp' + str(t), clim=[0.2, 1])
+#    plt.plot(GD_exp[t].T[0], GD_exp[t].T[1],'xr')
 #
 plt.axis('equal')
+
+#%%
+t=0
+vect_field_exp[t].show('exp')
+vect_field_mod[t].show('mod')
+(vect_field_exp[t] - vect_field_mod[t]).show('diff')
 
 #%%
 r_cbis = 0.8 * r_c
@@ -377,11 +435,11 @@ b_initbis = [a_initbis[0] + r_b*np.cos(theta_b_init), a_initbis[1] + r_b*np.sin(
 c_initbis = [b_initbis[0] + r_cbis*np.cos(theta_c_init + theta_b_init), b_initbis[1] + r_cbis*np.sin(theta_c_init + theta_b_init)]
 
 templatebis = generate_image_2articulations(space, a_initbis, b_initbis, c_initbis, 0.5*width)
-I=TemporalAttachmentModulesGeom.ShootTemplateFromVectorFields(vect_field, templatebis)
+I=TemporalAttachmentModulesGeom.ShootTemplateFromVectorFields(vect_field_mod, templatebis)
 
 for t in range(nb_time_point_int+1):
     I[t].show(str(t))
-    plt.plot(GD[t].T[0], GD[t].T[1],'xr')
+    plt.plot(GD_mod[t].T[0], GD_mod[t].T[1],'xr')
 #
 plt.axis('equal')
 #%%
@@ -410,8 +468,8 @@ for idata in range(nbdatamax):
     plt.quiver(points.T[0][::step],points.T[1][::step],v[0][::step],v[1][::step], color='r', scale = 10)
     plt.plot(param[::2], param[1::2], 'xb')
     plt.savefig(namefig)
-    
-    
+
+
     namefig =  pathresult + name_exp_save + 'data' + str(idata) + 'estimated' + '.png'
 
     v =  0.25*Articul2.ComputeField([param[0:2], param[2:4], param[4:6]], [1])
@@ -420,7 +478,7 @@ for idata in range(nbdatamax):
     fig.delaxes(fig.axes[1])
     plt.quiver(points.T[0][::step],points.T[1][::step],v[0][::step],v[1][::step], color='r', scale = 10)
     plt.plot(param[::2], param[1::2], 'xb')
-    
+
     plt.savefig(namefig)
 #
 

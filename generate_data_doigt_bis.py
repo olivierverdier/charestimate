@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Created on Wed Jan 10 17:11:03 2018
+
+@author: bgris
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
 Created on Fri Dec  8 12:24:15 2017
 
 @author: bgris
@@ -8,6 +16,7 @@ Created on Fri Dec  8 12:24:15 2017
 
 import structured_vector_fields as struct
 import function_compute_pointsvectors as cmp
+import function_generate_data_doigt_bis as fun_gen
 import group
 import pytest
 import numpy as np
@@ -16,113 +25,6 @@ import estimate_structured_base_pointsvectors as est_coeff
 import os
 import matplotlib.pyplot as plt
 import random as rd
-#%% functions
-def Rtheta(theta,points):
-    # theta is the angle, in rad
-    # input = list of points, for ex given by space.points() or
-    # np.array(vect_field).T
-    #output = list of points of same size, rotated of an angle theta
-
-    points_rot=np.empty_like(points).T
-    points_rot[0]=np.cos(theta)*points.T[0].copy() - np.sin(theta)*points.T[1].copy()
-    points_rot[1]=np.sin(theta)*points.T[0].copy() + np.cos(theta)*points.T[1].copy()
-
-    return points_rot.T.copy()
-#
-
-
-def Rot_inf(points):
-    # theta is the angle, in rad
-    # input = list of points, for ex given by space.points() or
-    # np.array(vect_field).T
-    #output = list of points of same size, rotated of an angle theta
-
-    points_rot=np.empty_like(points).T
-    points_rot[0] = -points.T[1].copy()
-    points_rot[1] = points.T[0].copy()
-
-    return points_rot.T.copy()
-#
-
-def generate_image_2articulations(space, a, b, c, width):
-
-    """
-    ONLY DIMENSION 2
-
-    generates a black and white image of a 'finger' with 2 articulations
-    at a and b, with ending point at c and constant width width
-    """
-
-    dim=2
-    points=space.points().T
-    limit = 0.0*width
-
-    vector_ab_unit, vector_ab_norm_orth, vector_ab_norm = cmp.compute_vect_unit(a, b)
-    vector_bc_unit, vector_bc_norm_orth, vector_bc_norm = cmp.compute_vect_unit(b, c)
-
-    points_prod_ab = sum([(points[u] - a[u])*vector_ab_unit[u] for u in range(dim)])
-    points_prod_bc = sum([(points[u] - b[u])*vector_bc_unit[u]  for u in range(dim)])
-
-    points_prod_ab_orth = sum([(points[u] - a[u])*vector_ab_norm_orth[u] for u in range(dim)])
-    points_prod_bc_orth = sum([(points[u] - b[u])*vector_bc_norm_orth[u]  for u in range(dim)])
-
-    I_arti0 = (0-limit <= points_prod_ab )*(points_prod_ab <= vector_ab_norm + limit)
-    I_arti0 *= (points_prod_ab_orth >= 0 - limit)* (points_prod_ab_orth <= width + limit)
-
-    I_arti1 = (0 - limit<= points_prod_bc )*(points_prod_bc <= vector_bc_norm + limit)
-    I_arti1 *= (points_prod_bc_orth >= 0-limit)* (points_prod_bc_orth <= width + limit)
-
-    return space.element((I_arti0 == 1) + (I_arti1 == 1))
-#
-
-def generate_image_2articulations_vectfield(space, a, b, c, width):
-
-    """
-    ONLY DIMENSION 2
-
-    generates a black and white image of a 'finger' with 2 articulations
-    at a and b, with ending point at c and constant width width
-    """
-
-    dim=2
-    points=space.points().T
-    limit = 0.3*width
-
-    vector_ab_unit, vector_ab_norm_orth, vector_ab_norm = cmp.compute_vect_unit(a, b)
-    vector_bc_unit, vector_bc_norm_orth, vector_bc_norm = cmp.compute_vect_unit(b, c)
-
-    points_prod_ab = sum([(points[u] - a[u])*vector_ab_unit[u] for u in range(dim)])
-    points_prod_bc = sum([(points[u] - b[u])*vector_bc_unit[u]  for u in range(dim)])
-
-    points_prod_ab_orth = sum([(points[u] - a[u])*vector_ab_norm_orth[u] for u in range(dim)])
-    points_prod_bc_orth = sum([(points[u] - b[u])*vector_bc_norm_orth[u]  for u in range(dim)])
-
-    I_arti0 = (0-limit <= points_prod_ab )*(points_prod_ab <= vector_ab_norm + limit)
-    I_arti0 *= (points_prod_ab_orth >= 0 - limit)* (points_prod_ab_orth <= width + limit)
-
-    I_arti1 = (0 - limit<= points_prod_bc )*(points_prod_bc <= vector_bc_norm + limit)
-    I_arti1 *= (points_prod_bc_orth >= 0-limit)* (points_prod_bc_orth <= width + limit)
-
-    return space.element((I_arti0 == 1) + (I_arti1 == 1))
-#
-
-
-def generate_vectorfield_2articulations_0(space, a, b, c, width):
-
-    """
-    ONLY DIMENSION 2
-
-    generates a black and white image of a 'finger' with 2 articulations
-    at a and b, with ending point at c and constant width width
-    """
-
-    dim = 2
-    points=space.points().T
-    I = generate_image_2articulations_vectfield(space, a, b, c, width)
-    points_a = np.array([points[u] - a[u] for u in range(dim)])
-    vect = space.tangent_bundle.element(Rot_inf(points_a.T).T)
-
-    return vect*I
 
 #
 
@@ -146,7 +48,7 @@ def generate_random_param(n, r_b, r_c):
 
 def generate_truth_from_param(param):
 
-    v_temp = generate_vectorfield_2articulations_0(space, param[0:2], param[2:4], param[4:6], width).copy()
+    v_temp = fun_gen.generate_vectorfield_2articulations_0(space, param[0:2], param[2:4], param[4:6], width).copy()
     truth_temp = np.empty((space.shape[0], space.shape[1], 2))
     truth_temp[:, :, 0] = v_temp[0].copy()
     truth_temp[:, :, 1] = v_temp[1].copy()
@@ -165,21 +67,6 @@ space = odl.uniform_discr(
 width = 1
 vector_fields_list = []
 image_list = []
-#a_list = [[0,0], [0,0], [0,0]]
-#b_list = [[0, 2], [0, 2], [-2, 0]]
-#c_list = [[0, 5], [-5, 2], [-5, 0]]
-#nbdata = 3
-#
-#for i in range(nbdata):
-#    a = a_list[i]
-#    b = b_list[i]
-#    c = c_list[i]
-#    vector_fields_list.append(generate_vectorfield_2articulations_0(space, a, b, c, width))
-#    image_list.append(generate_image_2articulations(space, a, b, c, width))
-##
-
-
-
 
 
 r_b = 4
@@ -190,12 +77,29 @@ nbdata = 10
 param =  generate_random_param(nbdata, r_b, r_c)
 points_list = []
 vectors_list = []
-vector_ab_unit, vector_ab_norm_orth, ab_norm = cmp.compute_vect_unit(param.T[0][0:2], param.T[0][2:4])
-vector_bc_unit, vector_bc_norm_orth, bc_norm = cmp.compute_vect_unit(param.T[0][2:4], param.T[0][4:6])
+
+a= param.T[0][0:2]
+b= param.T[0][2:4]
+c= param.T[0][4:6]
+
+vector_ab_unit, vector_ab_norm_orth, ab_norm = cmp.compute_vect_unit(a, b)
+vector_bc_unit, vector_bc_norm_orth, bc_norm = cmp.compute_vect_unit(b, c)
+
+base_points_a = [a - 0.5*width *vector_ab_norm_orth, a + 0.5*width *vector_ab_norm_orth ]
+base_points_c = [c - 0.5*width *vector_bc_norm_orth, c + 0.5*width *vector_bc_norm_orth ]
+
+base_points_b = []
+base_points_b.append(cmp.solve_intersection(base_points_a[0], vector_ab_unit, base_points_c[0], vector_bc_unit, ab_norm).copy())
+base_points_b.append(cmp.solve_intersection(base_points_a[1], vector_ab_unit, base_points_c[1], vector_bc_unit, ab_norm).copy())
+
+
+vector_points_b_unit, vector_points_b_norm_orth, points_b_norm = cmp.compute_vect_unit(base_points_b[0], base_points_b[1])
+
+n_orth = int((points_b_norm + 0.2*width) / sigma) +1
 nb_ab = int((ab_norm + 0.2*width) / sigma) +1
-nb_ab_orth = int(2 * width / sigma) +1
 nb_bc = int((bc_norm  + 0.2*width) / sigma) +1
-nb_bc_orth = int(2*width / sigma) +1
+
+
 
 
 for i in range(nbdata):
@@ -203,14 +107,13 @@ for i in range(nbdata):
     b = param.T[i][2:4]
     c = param.T[i][4:6]
     truth_temp = generate_truth_from_param(param.T[i]).copy()
-    image_list.append(generate_image_2articulations(space, a, b, c, width))
+    image_list.append(fun_gen.generate_image_2articulations(space, a, b, c, width))
 
     vector_fields_list.append(truth_temp.copy())
-    points, vectors = cmp.compute_pointsvectors_2articulations_nb(a, b, c, width, sigma, nb_ab, nb_ab_orth, nb_bc, nb_bc_orth)
+    points, vectors = cmp.compute_pointsvectors_2articulations_bis_nb(a, b, c, width, sigma, n_orth, nb_ab, nb_bc)
     points_list.append(points.copy())
     vectors_list.append(vectors.copy())
 #
-
 
 
 #%% Create projected vector fields (structured and unstructured)
@@ -271,7 +174,7 @@ for i in range(nbdata):
 #
 
 #%% Save data
-path = '/home/bgris/data/Doigt/'
+path = '/home/bgris/data/Doigtbis/'
 name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata) + '/'
 name = path + name_exp
 
@@ -284,9 +187,8 @@ for i in range(nbdata):
     np.savetxt(name + 'vectors' + str(i), vectors_list[i])
 #
 np.savetxt(name + 'nameab', [nb_ab])
-np.savetxt(name + 'nameaborth', [nb_ab_orth])
 np.savetxt(name + 'namebc', [nb_bc])
-np.savetxt(name + 'namebc_orth', [nb_bc_orth])
+np.savetxt(name + 'name_orth', [n_orth])
 #%% Load data
 structured_load = []
 unstructured_load = []
@@ -309,3 +211,32 @@ nb_ab_load = int(np.loadtxt(name + 'nameab'))
 nb_ab_orth_load = int(np.loadtxt(name + 'nameaborth'))
 nb_bc_load = int(np.loadtxt(name + 'namebc'))
 nb_bc_orth_load = int(np.loadtxt(name + 'namebc_orth'))
+
+#%% See accuracy of projection
+
+
+for i in range(nbdata):
+    space.tangent_bundle.element([vector_fields_list[i][:,:,u] for u in range(2)])[0].show('truth' + str(i), clim=[-5,5])
+    plt.plot(param.T[i][0::2], param.T[i][1::2], 'xb')
+    unstructured_list[i][0].show('projected' + str(i), clim=[-5,5])
+    plt.plot(param.T[i][0::2], param.T[i][1::2], 'xb')
+
+#
+
+for i in range(nbdata):
+    (space.tangent_bundle.element([vector_fields_list[i][:,:,u] for u in range(2)]) -  unstructured_list[i]).show('diff' + str(i))
+
+#
+
+
+#%%
+for i in range(nbdata):
+    image_list[i].show()
+    plt.plot(points_list[i][0], points_list[i][1], 'xb')
+    plt.plot(param.T[i][0::2], param.T[i][1::2], 'xr')
+
+    space.tangent_bundle.element([vector_fields_list[i][:,:,u] for u in range(2)]).show()
+    plt.plot(points_list[i][0], points_list[i][1], 'xb')
+    plt.plot(param.T[i][0::2], param.T[i][1::2], 'xr')
+#
+
