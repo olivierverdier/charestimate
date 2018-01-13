@@ -61,7 +61,7 @@ width = 2
 
 r_b = 4
 r_c = 4
-sigma = 0.3
+sigma = 0.2
 
 nbdata = 10
 #param =  gen.generate_random_param(nbdata, r_b, r_c)

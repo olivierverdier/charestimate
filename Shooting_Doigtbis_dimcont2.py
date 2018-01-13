@@ -22,10 +22,11 @@ Created on Wed Jan 10 11:17:38 2018
 @author: bgris
 """
 
-
+#namepath = 'bgris'
+namepath = 'barbara'
 
 import sys
-sys.path.insert(0, '/home/bgris')
+sys.path.insert(0, '/home/' + namepath)
 from DeformationModulesODL.deform import Kernel
 from DeformationModulesODL.deform import DeformationModuleAbstract
 from DeformationModulesODL.deform import SumTranslations
@@ -74,7 +75,7 @@ nbdata = 10
 nbdatamax = 5
 
 sblur = 5
-path = '/home/bgris/data/'
+path = '/home/' + namepath + '/data/'
 
 pathexp = 'Doigtbis_dimcont2/'
 #pathexp = 'RotationTranslationRectangle_dimcont2/'
@@ -85,10 +86,10 @@ path += pathexp
 name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata) + '_sblur_' + str(sblur)
 
 
-pathresult = '/home/bgris/Results/DeformationModules/Doigtbis_dimcont2/'
+pathresult = '/home/' + namepath + '/Results/DeformationModules/Doigtbis_dimcont2/'
 #pathresult = '/home/bgris/Results/DeformationModules/RotationRectangle/'
 #pathdata = '/home/bgris/data/RotationRectangle/'
-pathdata = '/home/bgris/data/Doigtbis_dimcont2/'
+pathdata = '/home/' + namepath + '/data/Doigtbis_dimcont2/'
 name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata) + '_sblur_' + str(sblur)
 
 
