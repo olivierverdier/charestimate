@@ -68,7 +68,8 @@ width = 2
 
 r_b = 4
 r_c = 4
-sigma = 0.2
+sigmadata = 0.2
+sigma = 0.5
 
 nbdata = 10
 nbdatamax = 5
@@ -82,14 +83,14 @@ pathexp = 'Doigtbis_dimcont2/'
 path += pathexp
 #path = '/home/bgris/data/Doigtbis/'
 #name_exp = 'rb_' + str(r_b) +  '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata)
-name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata) + '_sblur_' + str(sblur)
+name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigmadata) + '_nbdata_' + str(nbdata) + '_sblur_' + str(sblur)
 
 
 pathresult = '/home/bgris/Results/DeformationModules/Doigtbis_dimcont2/'
 #pathresult = '/home/bgris/Results/DeformationModules/RotationRectangle/'
 #pathdata = '/home/bgris/data/RotationRectangle/'
 pathdata = '/home/bgris/data/Doigtbis_dimcont2/'
-name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata) + '_sblur_' + str(sblur)
+name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigmadata) + '_nbdata_' + str(nbdata) + '_sblur_' + str(sblur)
 
 
 namedata = pathdata + name_exp
@@ -151,7 +152,7 @@ Articul2 = FromPointsVectorsCoeff_MultiDim.FromPointsVectorsCoeff_MultiDim(space
 #%% functional
 dim = 2
 lam=0.0001
-nb_time_point_int=10
+nb_time_point_int=20
 lamb0=1e-5
 lamb1=1e-5
 
@@ -228,15 +229,18 @@ def vect_field_list(GD_init,Cont):
 theta_b_init = 0.5*np.pi
 theta_c_init = 0.0*np.pi
 
-a_init =[0., 0.]
-b_init = [a_init[0] + r_b*np.cos(theta_b_init), a_init[1] + r_b*np.sin(theta_b_init)]
-c_init = [b_init[0] + r_c*np.cos(theta_b_init + theta_c_init), b_init[1] + r_c*np.sin(theta_b_init + theta_c_init)]
+r_b_bis = r_b
+r_c_bis = 1.2*r_c
+a_init =[0., -2.]
+b_init = [a_init[0] + r_b_bis*np.cos(theta_b_init), a_init[1] + r_b_bis*np.sin(theta_b_init)]
+c_init = [b_init[0] + r_c_bis*np.cos(theta_b_init + theta_c_init), b_init[1] + r_c_bis*np.sin(theta_b_init + theta_c_init)]
 
 GD_init=np.array([a_init, b_init, c_init])
-Cont = -0.2*odl.ProductSpace(Module.Contspace, nb_time_point_int+1).one()
+Cont = 0.2*odl.ProductSpace(Module.Contspace, nb_time_point_int+1).one()
 
 for i in range(nb_time_point_int):
-    Cont[i][1]*= 1.0
+    Cont[i][0]*= 1.1
+    Cont[i][1]*= 1.1
 
 GD_mod, vect_field_mod = vect_field_list(GD_init, Cont)
 
@@ -280,12 +284,12 @@ GD_mod, vect_field_mod = vect_field_list(GD_init, Cont)
 #I_mod=TemporalAttachmentModulesGeom.ShootTemplateFromVectorFields(vect_field_mod, template_bis)
 ##%%
 r_b_bis = r_b
-r_c_bis = 0.85*r_c
-a_init =[0., 0.]
+r_c_bis = 1.1*r_c
+a_init =[0., -2.]
 b_init = [a_init[0] + r_b_bis*np.cos(theta_b_init), a_init[1] + r_b_bis*np.sin(theta_b_init)]
 c_init = [b_init[0] + r_c_bis*np.cos(theta_b_init + theta_c_init), b_init[1] + r_c_bis*np.sin(theta_b_init + theta_c_init)]
 
-template_init = fun_gen.generate_image_2articulations(space, a_init, b_init, c_init, 0.5*width)
+template_init = fun_gen.generate_image_2articulations(space, a_init, b_init, c_init, 1*width)
 template = template_init.copy()
 template = 1*space.element(scipy.ndimage.filters.gaussian_filter(template_init.asarray(), 10))
 I_mod=TemporalAttachmentModulesGeom.ShootTemplateFromVectorFields(vect_field_mod, template)
@@ -306,16 +310,20 @@ for t in range(nb_time_point_int+1):
 #plt.plot(b[0], b[1], 'x')
 #plt.plot(c[0], c[1], 'x')
 
+#grid_points=compute_grid_deformation_list(vect_field_mod, 1/nb_time_point_int, template.space.points().T)
+
 #%%
 import copy
 I_mod_save = copy.deepcopy(I_mod)
 #%%
 for t in range(nb_time_point_int+1):
-    I_mod_save[t].show('mod' + str(t), clim=[0,1])
+    I_mod[t].show('mod' + str(t), clim=[0,1])
     plt.plot(GD_mod[t].T[0], GD_mod[t].T[1],'xr')
     #I_exp[t].show('exp' + str(t), clim=[0.1, 1])
     #plt.plot(GD_exp[t].T[0], GD_exp[t].T[1],'xr')
-    plt.axis([-10.0, 10.0, -10.0, 10.0])
+    #grid = grid_points[t].reshape((2,template.space.shape[0], template.space.shape[1]))
+    #plot_grid(grid, 5)
+    #plt.axis([-10.0, 10.0, -10.0, 10.0])
     plt.axis('equal')
 
 #
@@ -335,88 +343,73 @@ vect_field_mod=functional_mod_temp.Module.ComputeField(GD_init,Cont_init).copy()
 vect_field_mod.show(str(Cont_init))
 
 #%%
+r_b_bis = 1.5*r_b
+r_c_bis = 1.5*0.9*r_c
+a_init =[0., 0.]
+b_init = [a_init[0] + r_b_bis*np.cos(theta_b_init), a_init[1] + r_b_bis*np.sin(theta_b_init)]
+c_init = [b_init[0] + r_c_bis*np.cos(theta_b_init + theta_c_init), b_init[1] + r_c_bis*np.sin(theta_b_init + theta_c_init)]
+GD_init=np.array([a_init, b_init, c_init])
 
 
-points, vectors = generate_points_vectors(GD_init)
 
-# if alpha is a matrix
-def compute_vectorfield_pointsvectorcoeff(points, vectors, alpha):
-    #nb_vectors = vectors.shape[1]
-    vector_translations = np.dot(np.array(vectors), np.array(alpha))
-    structured = struct.create_structured(points, vector_translations)
-    unstructured = gen_unstructured(structured)
+Cont_init = Articul2.Contspace.element([1,0])
+v10 = Articul2.ComputeField(GD_init, Cont_init)
 
-    return unstructured.copy()
+v10.show()
+
+
+#%%
+
+Cont = [1., 1.]
+v = Cont[0] * v10 + Cont[1] * v01
+
+
+points=space.points()
+fig = template.show(str(Cont), clim=[0, 2])
+plt.axis('off')
+fig.delaxes(fig.axes[1])
+
+step = 60
+fac = 0.5
+plt.quiver(points.T[0][::step],points.T[1][::step],fac*v[0][::step],fac*v[1][::step], color='r', scale = 80)
+
 #
 
-gen_unstructured = struct.get_from_structured_to_unstructured(space, kernel)
+#%%
 
+path = '/home/bgris/data/Doigtbis_dimcont2/ex_source/'
 
-vector_translations = np.dot(np.array(vectors), np.array(alpha[u]))
-structured = struct.create_structured(points, vector_translations)
-unstructured = gen_unstructured(structured)
+np.savetxt(path + '11', I_mod[0].asarray())
+#%%
+import os
+sblur = 5
+path = '/home/bgris/Results/DeformationModules/'
 
-mg = space.meshgrid
+pathexp = 'Doigtbis_dimcont2/'
+#pathexp = 'RotationTranslationRectangle_dimcont2/'
 
-    def from_structured_to_unstructured(structured_field):
-        dim_double, nb_points = structured.shape
-        dim = int(dim_double/2)
-        points = get_points(structured)
-        vectors = get_vectors(structured)
-        unstructured = space.tangent_bundle.zero()
+path += pathexp
+#path = '/home/bgris/data/Doigtbis/'
+#name_exp = 'rb_' + str(r_b) +  '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata)
+name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata) + '_sblur_' + str(sblur)
+#name_exp = 'rb_' + str(r_b) + '_width_' + str(width) + '_sigma_' + str(sigma) + 'nb_fixed' + '_nbdata_' + str(nbdata)
+#name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata)
 
-        for k in range(nb_points):
-            def kern_app_point(x):
-                return kernel(x, points[:, k])
+name = path + name_exp + 'increasedsize' +'/'
+os.mkdir(name)
 
-            kern_discr = kern_app_point(mg)
+points=space.points()
+step = 40
+for t in range(nb_time_point_int+1):
+    fig =I_mod[t].show( clim=[0,1])
+    plt.plot(GD_mod[t].T[0], GD_mod[t].T[1],'xr')
+    name_fig = name +  'plot_t_' + str(t)
+    plt.axis('off')
+    fig.delaxes(fig.axes[1])
+    plt.savefig(name_fig)
 
-            unstructured += space.tangent_bundle.element([kern_discr * vect for vect in vectors[:, k]]).copy()
-
-        return unstructured
-
-
-def kernel(x, y):
-    #si = tf.shape(x)[0]
-    return np.exp(- sum([ (x[i] - y[i]) ** 2 for i in range(dim)]) / (sigma ** 2))
-
-
-
-
-unstructured = sum([space.tangent_bundle.element([kernel(mg, points[:, k]) * vect for vect in vectors[:, k]]) for k in range(nb_points)])
-
-
-unstructured = sum([space.tangent_bundle.element([kernel(mg, points.reshape([2,1,1,1044]))
-
-pt0 = points[0].reshape(1,1,1044)
-pt1 = points[1].reshape(1044,1)
-
-vect_field_mod = sum([Cont_init[u]*compute_vectorfield_pointsvectorcoeff(points, vectors, alpha[u]) for u in range(2)])
-vect_field_mod.show(str(Cont_init))
-
-
-
-
-    mg = space.meshgrid
-    nb_pts_mg0 = mg[0].shape[0]
-    nb_pts_mg1 = mg[1].shape[1]
-    mg_reshaped = []
-    mg_reshaped.append(mg[0].reshape([nb_pts_mg0,1,1]))
-    mg_reshaped.append(mg[1].reshape([1,nb_pts_mg1,1]))
-
-    def from_structured_to_unstructured(structured_field):
-        dim_double, nb_points = structured_field.shape
-        dim = int(dim_double/2)
-        points = get_points(structured_field)
-        vectors = get_vectors(structured_field)
-        unstructured = space.tangent_bundle.zero()
-        pt0 = points[0].reshape(1,1,nb_points)
-        pt1 = points[1].reshape(1,1,nb_points)
-        points_reshaped = [pt0, pt1]
-        vectors_reshaped = np.transpose(vectors.reshape(dim,nb_points,1), (0,2,1))
-        kern_discr = kernel(mg_reshaped, points_reshaped)
-        unstructured = space.tangent_bundle.element([(vectors_reshaped[u] * kern_discr).sum(2) for u in range(dim)])
-
-
-
-
+#
+#for k in range(NbMod):
+#    plt.plot(GD[i][k][2][0], GD[i][k][2][1], 'xb')
+#    plt.plot(GD[i][k][3][0], GD[i][k][3][1], 'xb')
+#plt
