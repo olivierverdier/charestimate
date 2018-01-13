@@ -155,6 +155,15 @@ if False:
     plt.plot(param.T[i][::2], param.T[i][1::2])
 #
 
+step = 50
+points = space.points()
+if False:
+    i = 0
+    image_list[i].show()
+    v = space.tangent_bundle.element([vector_fields_list[i][:,:,u] for u in range(2)])
+    plt.quiver(points.T[0][::step],points.T[1][::step],v[0][::step],v[1][::step], color='r')
+    plt.plot(param.T[i][::2], param.T[i][1::2], 'xb')
+#
 
 #%% Create projected vector fields (structured and unstructured)
 #sigma = 0.5
