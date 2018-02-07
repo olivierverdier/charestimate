@@ -148,9 +148,9 @@ def make_covariance_mixte_matrix(points1, points2, kernel):
     """ creates the covariance matrix of the kernel for the given points"""
 
     dim = len(points1)
-    p1 = np.reshape(points1, (dim, 1, -1))
-    p2 = np.reshape(points2, (dim, -1, 1))
-
+    p1 = np.reshape(points1, (dim, -1, 1))
+    p2 = np.reshape(points2, (dim, 1, -1))
+    
     return kernel(p1, p2)
 
 
