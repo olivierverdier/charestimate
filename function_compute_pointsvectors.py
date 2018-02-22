@@ -263,3 +263,28 @@ def compute_pointsvectors_2articulations_bis_nb(a, b, c, width, sigma, n_orth, n
 
 
 
+def compute_pointsvectors_2articulations_thin(a, b, c, nb_ab, nb_bc):
+    dim = 2
+    a = np.array(a)
+    b = np.array(b)
+    c = np.array(c)
+    vector_ab = b - a
+    vector_ab_orth = np.array([vector_ab[1], -np.array(vector_ab[0])])
+    vector_bc = c - b
+    vector_bc_orth = np.array([vector_bc[1], -np.array(vector_bc[0])])
+
+    points = []
+
+    for i in range(nb_ab):
+        points.append(a + (i / nb_ab) * vector_ab)
+    for i in range(nb_bc + 1):
+        points.append(b + (i / nb_bc) * vector_bc)
+
+    vectors = np.array([vector_ab.copy(), vector_ab_orth.copy(),
+               vector_bc.copy(), vector_bc_orth.copy()]).T
+
+
+    return [np.array(points).T, vectors]
+
+
+

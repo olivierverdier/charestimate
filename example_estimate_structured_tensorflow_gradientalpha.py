@@ -48,10 +48,10 @@ width = 1
 #gen.generate_vectorfield_2articulations_0(space, a, b, c, width).show()
 
 
-r_b = 4
+r_b = 2
 r_c = 4
-sigma = 0.2
-
+sigma = 1
+sblur = 5
 nbdata = 10
 #param =  gen.generate_random_param(nbdata, r_b, r_c)
 #points_list = []
@@ -198,10 +198,11 @@ def kernel_np(x, y):
 
 
 #path = '/home/bgris/data/RotationRectangle/'
-path = '/home/bgris/data/Doigtbis/'
+#path = '/home/bgris/data/Doigtbis/'
+path = '/home/bgris/data/Doigtbis_dimcont2_thin/'
 #name_exp = 'rb_' + str(r_b) +  '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata)
 #name_exp = 'rb_' + str(r_b) + '_width_' + str(width) + '_sigma_' + str(sigma) + 'nb_fixed' + '_nbdata_' + str(nbdata)
-name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata)
+name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) +   '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata) + '_sblur_' + str(sblur)
 
 name = path + name_exp + '/'
 
@@ -318,7 +319,7 @@ session.run(tf.global_variables_initializer())
 grads = tf.gradients(output, [inp])
 grad = grads[0]
 #%% Gradient descent initialisation
-nb_it = 1000
+nb_it = 10000
 
 alpha_init = np.ones([nb_vectors, nb_points])
 alpha_init[0][0] = 1.0
@@ -328,7 +329,7 @@ alpha = alpha_init.copy()
 energy = output.eval(feed_dict={inp: alpha_init})
 
 print('init  energy = {}'.format( energy))
-step = 0.02
+step = 0.2
 #%%
 for i in range(nb_it):
     energy_grad = grad.eval(feed_dict={inp: alpha})
@@ -345,10 +346,10 @@ for i in range(nb_it):
 #
 
 
-##%%
+#%%
 
 #path = '/home/bgris/Results/DeformationModules/RotationRectangle/'
-path = '/home/bgris/Results/DeformationModules/Doigtbis/'
+path = '/home/bgris/Results/DeformationModule/Doigtbisthin/'
 ##name_exp = 'rb_' + str(r_b) + '_rc_' +  '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata)
 #name_exp = 'rb_' + str(r_b) + '_width_' + str(width) + '_sigma_' + str(sigma) + 'nb_fixed' + '_nbdata_' + str(nbdata)
 

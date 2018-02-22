@@ -153,159 +153,159 @@ def generate_truth_from_param(param):
 
     return truth_temp.copy()
 #
-
-#%% generate data
-
-
-space = odl.uniform_discr(
-        min_pt =[-10, -10], max_pt=[10, 10], shape=[512, 512],
-        dtype='float32', interp='linear')
-
-
-width = 1
-vector_fields_list = []
-image_list = []
-#a_list = [[0,0], [0,0], [0,0]]
-#b_list = [[0, 2], [0, 2], [-2, 0]]
-#c_list = [[0, 5], [-5, 2], [-5, 0]]
-#nbdata = 3
 #
-#for i in range(nbdata):
-#    a = a_list[i]
-#    b = b_list[i]
-#    c = c_list[i]
-#    vector_fields_list.append(generate_vectorfield_2articulations_0(space, a, b, c, width))
-#    image_list.append(generate_image_2articulations(space, a, b, c, width))
-##
-
-
-
-
-
-r_b = 4
-r_c = 4
-sigma = 0.2
-
-nbdata = 10
-param =  generate_random_param(nbdata, r_b, r_c)
-points_list = []
-vectors_list = []
-vector_ab_unit, vector_ab_norm_orth, ab_norm = cmp.compute_vect_unit(param.T[0][0:2], param.T[0][2:4])
-vector_bc_unit, vector_bc_norm_orth, bc_norm = cmp.compute_vect_unit(param.T[0][2:4], param.T[0][4:6])
-nb_ab = int((ab_norm + 0.2*width) / sigma) +1
-nb_ab_orth = int(2 * width / sigma) +1
-nb_bc = int((bc_norm  + 0.2*width) / sigma) +1
-nb_bc_orth = int(2*width / sigma) +1
-
-
-for i in range(nbdata):
-    a = param.T[i][0:2]
-    b = param.T[i][2:4]
-    c = param.T[i][4:6]
-    truth_temp = generate_truth_from_param(param.T[i]).copy()
-    image_list.append(generate_image_2articulations(space, a, b, c, width))
-
-    vector_fields_list.append(truth_temp.copy())
-    points, vectors = cmp.compute_pointsvectors_2articulations_nb(a, b, c, width, sigma, nb_ab, nb_ab_orth, nb_bc, nb_bc_orth)
-    points_list.append(points.copy())
-    vectors_list.append(vectors.copy())
+##%% generate data
 #
-
-
-
-#%% Create projected vector fields (structured and unstructured)
-#sigma = 0.5
+#
+#space = odl.uniform_discr(
+#        min_pt =[-10, -10], max_pt=[10, 10], shape=[512, 512],
+#        dtype='float32', interp='linear')
+#
+#
 #width = 1
-## Set number of points
-#vector_ab_unit, vector_ab_norm_orth, ab_norm = cmp.compute_vect_unit(a_list[0], b_list[0])
-#vector_bc_unit, vector_bc_norm_orth, bc_norm = cmp.compute_vect_unit(b_list[0], c_list[0])
+#vector_fields_list = []
+#image_list = []
+##a_list = [[0,0], [0,0], [0,0]]
+##b_list = [[0, 2], [0, 2], [-2, 0]]
+##c_list = [[0, 5], [-5, 2], [-5, 0]]
+##nbdata = 3
+##
+##for i in range(nbdata):
+##    a = a_list[i]
+##    b = b_list[i]
+##    c = c_list[i]
+##    vector_fields_list.append(generate_vectorfield_2articulations_0(space, a, b, c, width))
+##    image_list.append(generate_image_2articulations(space, a, b, c, width))
+###
+#
+#
+#
+#
+#
+#r_b = 4
+#r_c = 4
+#sigma = 0.2
+#
+#nbdata = 10
+#param =  generate_random_param(nbdata, r_b, r_c)
+#points_list = []
+#vectors_list = []
+#vector_ab_unit, vector_ab_norm_orth, ab_norm = cmp.compute_vect_unit(param.T[0][0:2], param.T[0][2:4])
+#vector_bc_unit, vector_bc_norm_orth, bc_norm = cmp.compute_vect_unit(param.T[0][2:4], param.T[0][4:6])
 #nb_ab = int((ab_norm + 0.2*width) / sigma) +1
 #nb_ab_orth = int(2 * width / sigma) +1
 #nb_bc = int((bc_norm  + 0.2*width) / sigma) +1
 #nb_bc_orth = int(2*width / sigma) +1
 #
-
-
-#points_temp, vectors_temp = cmp.compute_pointsvectors_2articulations_nb(a_list[0], b_list[0], c_list[0], width, sigma, nb_ab, nb_ab_orth, nb_bc, nb_bc_orth)
-nb_vectors = len(vectors_list[0][0])
-nb_points = len(points_list[0][0])
-
-dim = 2
-
-
-# Create list of structured and unstructured
-def kernel(x, y):
-    return np.exp(- sum([ (xi - yi) ** 2 for xi, yi in zip(x, y)]) / (sigma ** 2))
-
-get_unstructured_op = struct.get_from_structured_to_unstructured(space, kernel)
-structured_list=[]
-unstructured_list=[]
-
-for i in range(nbdata):
-    points = points_list[i].copy()
-    vectors = vectors_list[i].copy()
-    #points, vectors = cmp.compute_pointsvectors_2articulations_nb(a_list[i], b_list[i], c_list[i], width, sigma, nb_ab, nb_ab_orth, nb_bc, nb_bc_orth)
-    eval_field = np.array([space.element(vector_fields_list[i][:,:,u]).interpolation(
-                points) for u in range(dim)]).copy()
-
-    vector_syst = np.zeros(dim*nb_points)
-    basis = np.identity(dim)
-
-
-
-    for k0 in range(nb_points):
-        for l0 in range(dim):
-            vector_syst[dim*k0 + l0] += np.dot(eval_field.T[k0],
-                    basis[:, l0])
-
-    eval_kernel = struct.make_covariance_matrix(points, kernel)
-
-    matrix_syst = np.kron(eval_kernel, basis)
-
-    alpha_concatenated = np.linalg.solve(matrix_syst, vector_syst)
-    alpha = struct.get_structured_vectors_from_concatenated(alpha_concatenated, nb_points, dim)
-    structured = struct.create_structured(points, alpha)
-
-    structured_list.append(structured.copy())
-    unstructured_list.append(get_unstructured_op(structured).copy())
 #
-
-#%% Save data
-path = '/home/bgris/data/Doigt/'
-name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata) + '/'
-name = path + name_exp
-
-os.mkdir(name)
-for i in range(nbdata):
-    np.savetxt(name + 'structured' + str(i), structured_list[i])
-    np.savetxt(name + 'unstructured' + str(i), unstructured_list[i])
-    np.savetxt(name + 'param' + str(i), param.T[i])
-    np.savetxt(name + 'points' + str(i), points_list[i])
-    np.savetxt(name + 'vectors' + str(i), vectors_list[i])
+#for i in range(nbdata):
+#    a = param.T[i][0:2]
+#    b = param.T[i][2:4]
+#    c = param.T[i][4:6]
+#    truth_temp = generate_truth_from_param(param.T[i]).copy()
+#    image_list.append(generate_image_2articulations(space, a, b, c, width))
 #
-np.savetxt(name + 'nameab', [nb_ab])
-np.savetxt(name + 'nameaborth', [nb_ab_orth])
-np.savetxt(name + 'namebc', [nb_bc])
-np.savetxt(name + 'namebc_orth', [nb_bc_orth])
-#%% Load data
-structured_load = []
-unstructured_load = []
-points_load = []
-vectors_load = []
-param_load = []
-
-for i in range(nbdata):
-    structured_load.append(np.loadtxt(name + 'structured' + str(i)))
-    unstructured_load.append(np.loadtxt(name + 'unstructured' + str(i)))
-    points_load.append(np.loadtxt(name + 'points' + str(i)))
-    vectors_load.append(np.loadtxt(name + 'vectors' + str(i)))
-    param_load.append(np.loadtxt(name + 'param' + str(i)))
+#    vector_fields_list.append(truth_temp.copy())
+#    points, vectors = cmp.compute_pointsvectors_2articulations_nb(a, b, c, width, sigma, nb_ab, nb_ab_orth, nb_bc, nb_bc_orth)
+#    points_list.append(points.copy())
+#    vectors_list.append(vectors.copy())
+##
 #
-
-
-param_load = np.array(param_load).T
-
-nb_ab_load = int(np.loadtxt(name + 'nameab'))
-nb_ab_orth_load = int(np.loadtxt(name + 'nameaborth'))
-nb_bc_load = int(np.loadtxt(name + 'namebc'))
-nb_bc_orth_load = int(np.loadtxt(name + 'namebc_orth'))
+#
+#
+##%% Create projected vector fields (structured and unstructured)
+##sigma = 0.5
+##width = 1
+### Set number of points
+##vector_ab_unit, vector_ab_norm_orth, ab_norm = cmp.compute_vect_unit(a_list[0], b_list[0])
+##vector_bc_unit, vector_bc_norm_orth, bc_norm = cmp.compute_vect_unit(b_list[0], c_list[0])
+##nb_ab = int((ab_norm + 0.2*width) / sigma) +1
+##nb_ab_orth = int(2 * width / sigma) +1
+##nb_bc = int((bc_norm  + 0.2*width) / sigma) +1
+##nb_bc_orth = int(2*width / sigma) +1
+##
+#
+#
+##points_temp, vectors_temp = cmp.compute_pointsvectors_2articulations_nb(a_list[0], b_list[0], c_list[0], width, sigma, nb_ab, nb_ab_orth, nb_bc, nb_bc_orth)
+#nb_vectors = len(vectors_list[0][0])
+#nb_points = len(points_list[0][0])
+#
+#dim = 2
+#
+#
+## Create list of structured and unstructured
+#def kernel(x, y):
+#    return np.exp(- sum([ (xi - yi) ** 2 for xi, yi in zip(x, y)]) / (sigma ** 2))
+#
+#get_unstructured_op = struct.get_from_structured_to_unstructured(space, kernel)
+#structured_list=[]
+#unstructured_list=[]
+#
+#for i in range(nbdata):
+#    points = points_list[i].copy()
+#    vectors = vectors_list[i].copy()
+#    #points, vectors = cmp.compute_pointsvectors_2articulations_nb(a_list[i], b_list[i], c_list[i], width, sigma, nb_ab, nb_ab_orth, nb_bc, nb_bc_orth)
+#    eval_field = np.array([space.element(vector_fields_list[i][:,:,u]).interpolation(
+#                points) for u in range(dim)]).copy()
+#
+#    vector_syst = np.zeros(dim*nb_points)
+#    basis = np.identity(dim)
+#
+#
+#
+#    for k0 in range(nb_points):
+#        for l0 in range(dim):
+#            vector_syst[dim*k0 + l0] += np.dot(eval_field.T[k0],
+#                    basis[:, l0])
+#
+#    eval_kernel = struct.make_covariance_matrix(points, kernel)
+#
+#    matrix_syst = np.kron(eval_kernel, basis)
+#
+#    alpha_concatenated = np.linalg.solve(matrix_syst, vector_syst)
+#    alpha = struct.get_structured_vectors_from_concatenated(alpha_concatenated, nb_points, dim)
+#    structured = struct.create_structured(points, alpha)
+#
+#    structured_list.append(structured.copy())
+#    unstructured_list.append(get_unstructured_op(structured).copy())
+##
+#
+##%% Save data
+#path = '/home/bgris/data/Doigt/'
+#name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata) + '/'
+#name = path + name_exp
+#
+#os.mkdir(name)
+#for i in range(nbdata):
+#    np.savetxt(name + 'structured' + str(i), structured_list[i])
+#    np.savetxt(name + 'unstructured' + str(i), unstructured_list[i])
+#    np.savetxt(name + 'param' + str(i), param.T[i])
+#    np.savetxt(name + 'points' + str(i), points_list[i])
+#    np.savetxt(name + 'vectors' + str(i), vectors_list[i])
+##
+#np.savetxt(name + 'nameab', [nb_ab])
+#np.savetxt(name + 'nameaborth', [nb_ab_orth])
+#np.savetxt(name + 'namebc', [nb_bc])
+#np.savetxt(name + 'namebc_orth', [nb_bc_orth])
+##%% Load data
+#structured_load = []
+#unstructured_load = []
+#points_load = []
+#vectors_load = []
+#param_load = []
+#
+#for i in range(nbdata):
+#    structured_load.append(np.loadtxt(name + 'structured' + str(i)))
+#    unstructured_load.append(np.loadtxt(name + 'unstructured' + str(i)))
+#    points_load.append(np.loadtxt(name + 'points' + str(i)))
+#    vectors_load.append(np.loadtxt(name + 'vectors' + str(i)))
+#    param_load.append(np.loadtxt(name + 'param' + str(i)))
+##
+#
+#
+#param_load = np.array(param_load).T
+#
+#nb_ab_load = int(np.loadtxt(name + 'nameab'))
+#nb_ab_orth_load = int(np.loadtxt(name + 'nameaborth'))
+#nb_bc_load = int(np.loadtxt(name + 'namebc'))
+#nb_bc_orth_load = int(np.loadtxt(name + 'namebc_orth'))

@@ -48,7 +48,7 @@ space = odl.uniform_discr(
         dtype='float32', interp='linear')
 
 
-width = 2
+#width = 2
 
 #a = [0, 0]
 #theta_b = 0.5*np.pi
@@ -59,10 +59,10 @@ width = 2
 #gen.generate_vectorfield_2articulations_0(space, a, b, c, width).show()
 
 
-r_b = 4
+r_b = 2
 r_c = 4
-sigma = 0.2
-
+sigma = 1
+sblur = 5
 nbdata = 10
 #param =  gen.generate_random_param(nbdata, r_b, r_c)
 #points_list = []
@@ -218,12 +218,13 @@ sblur = 5
 path = '/home/bgris/data/'
 
 pathexp = 'Doigtbis_dimcont2/'
+pathexp = 'Doigtbis_dimcont2_thin/'
 #pathexp = 'RotationTranslationRectangle_dimcont2/'
 
 path += pathexp
 #path = '/home/bgris/data/Doigtbis/'
 #name_exp = 'rb_' + str(r_b) +  '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata)
-name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata) + '_sblur_' + str(sblur)
+name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata) + '_sblur_' + str(sblur)
 #name_exp = 'rb_' + str(r_b) + '_width_' + str(width) + '_sigma_' + str(sigma) + 'nb_fixed' + '_nbdata_' + str(nbdata)
 #name_exp = 'rb_' + str(r_b) + '_rc_' + str(r_c) + '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata)
 
@@ -388,7 +389,8 @@ for i in range(nb_it):
 #%%
 
 #path = '/home/bgris/Results/DeformationModules/RotationRectangle/'
-path = '/home/bgris/Results/' + 'DeformationModules/'
+path = '/home/bgris/Results/' + 'DeformationModule/'
+
 path += pathexp
 ##name_exp = 'rb_' + str(r_b) + '_rc_' +  '_width_' + str(width) + '_sigma_' + str(sigma) + '_nbdata_' + str(nbdata)
 #name_exp = 'rb_' + str(r_b) + '_width_' + str(width) + '_sigma_' + str(sigma) + 'nb_fixed' + '_nbdata_' + str(nbdata)
